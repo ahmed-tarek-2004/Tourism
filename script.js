@@ -131,6 +131,138 @@ packageTabs.forEach(tab => {
    REVIEWS SLIDER
 ========================================= */
 
+/* =========================================
+   TRIPS / PROGRAMS SLIDER
+========================================= */
+
+const trips = document.querySelectorAll(".trip-card");
+
+const tripDots = document.querySelectorAll(".trip-dot");
+
+const nextTrip = document.getElementById("nextTrip");
+
+const prevTrip = document.getElementById("prevTrip");
+
+let currentTrip = 0;
+
+
+/* =========================================
+   SHOW TRIP
+========================================= */
+
+function showTrip(index) {
+
+    trips.forEach(trip => {
+        trip.classList.remove("active");
+    });
+
+    tripDots.forEach(dot => {
+        dot.classList.remove("active");
+    });
+
+    trips[index].classList.add("active");
+
+    tripDots[index].classList.add("active");
+}
+
+
+/* =========================================
+   NEXT
+========================================= */
+
+function nextTripSlide() {
+
+    currentTrip++;
+
+    if (currentTrip >= trips.length) {
+        currentTrip = 0;
+    }
+
+    showTrip(currentTrip);
+}
+
+
+/* =========================================
+   PREVIOUS
+========================================= */
+
+function previousTripSlide() {
+
+    currentTrip--;
+
+    if (currentTrip < 0) {
+        currentTrip = trips.length - 1;
+    }
+
+    showTrip(currentTrip);
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+nextTrip.addEventListener(
+    "click",
+    nextTripSlide
+);
+
+prevTrip.addEventListener(
+    "click",
+    previousTripSlide
+);
+
+
+/* =========================================
+   DOTS
+========================================= */
+
+tripDots.forEach((dot, index) => {
+
+    dot.addEventListener("click", () => {
+
+        currentTrip = index;
+
+        showTrip(currentTrip);
+
+    });
+
+});
+
+
+/* =========================================
+   AUTO SLIDE
+========================================= */
+
+let tripAutoSlide = setInterval(
+    nextTripSlide,
+    7000
+);
+
+
+/* =========================================
+   PAUSE ON HOVER
+========================================= */
+
+const tripsSlider = document.querySelector(".trips-slider");
+
+tripsSlider.addEventListener("mouseenter", () => {
+
+    clearInterval(tripAutoSlide);
+
+});
+
+tripsSlider.addEventListener("mouseleave", () => {
+
+    tripAutoSlide = setInterval(
+        nextTripSlide,
+        7000
+    );
+
+});
+
+
+
 const reviews = document.querySelectorAll(".review-card");
 const dots = document.querySelectorAll(".dot");
 

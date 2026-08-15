@@ -234,32 +234,32 @@ tripDots.forEach((dot, index) => {
    AUTO SLIDE
 ========================================= */
 
-let tripAutoSlide = setInterval(
-    nextTripSlide,
-    7000
-);
+// let tripAutoSlide = setInterval(
+//     nextTripSlide,
+//     7000
+// );
 
 
 /* =========================================
    PAUSE ON HOVER
 ========================================= */
 
-const tripsSlider = document.querySelector(".trips-slider");
+// const tripsSlider = document.querySelector(".trips-slider");
 
-tripsSlider.addEventListener("mouseenter", () => {
+// tripsSlider.addEventListener("mouseenter", () => {
 
-    clearInterval(tripAutoSlide);
+//     clearInterval(tripAutoSlide);
 
-});
+// });
 
-tripsSlider.addEventListener("mouseleave", () => {
+// tripsSlider.addEventListener("mouseleave", () => {
 
-    tripAutoSlide = setInterval(
-        nextTripSlide,
-        7000
-    );
+//     tripAutoSlide = setInterval(
+//         nextTripSlide,
+//         7000
+//     );
 
-});
+// });
 
 
 

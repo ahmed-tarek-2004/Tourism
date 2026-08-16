@@ -1,32 +1,113 @@
 import React, { useState, useEffect } from 'react';
 import './style.css';
 
+// =========================================
+// 1. DATA (محاكاة للبيانات اللي هترجع من الـ API)
+// =========================================
+const umrahTripsData = [
+  {
+    id: 1,
+    title: "برنامج عمرة 15 يوم",
+    badge: "برنامج عمرة",
+    days: "15 يوم",
+    date: "8 سبتمبر 2026",
+    image: "https://rihlatravel.com/assets/upload/seo/NeU21BZv60y8JH4Vwa5d0tdQABr3Xl.webp",
+    airline: "طيران سعودي",
+    route: ["القاهرة", "جدة", "المدينة المنورة", "القاهرة"],
+    hotels: [
+      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
+      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
+    ],
+    prices: { quad: "41,500", triple: "44,500", double: "47,500" }
+  },
+  {
+    id: 2,
+    title: "برنامج عمرة 15 يوم",
+    badge: "برنامج عمرة",
+    days: "15 يوم",
+    date: "12 سبتمبر 2026",
+    image: "img/img2.jpeg",
+    airline: "طيران اير كايرو",
+    route: ["القاهرة", "جدة", "القاهرة"],
+    hotels: [
+      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
+      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
+    ],
+    prices: { quad: "39,500", triple: "42,500", double: "45,500" }
+  },
+  {
+    id: 3,
+    title: "برنامج عمرة 15 يوم (بري)",
+    badge: "برنامج عمرة",
+    days: "15 يوم",
+    date: "8 سبتمبر 2026",
+    image: "img/img3.jpeg",
+    airline: "نقل بري فاخر",
+    route: ["بري"],
+    hotels: [
+      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
+      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
+    ],
+    prices: { quad: "33,000", triple: "36,000", double: "39,000" }
+  }
+];
+
+const hajjTripsData = [
+  {
+    id: 4,
+    title: "برنامج الحج الاقتصادي",
+    badge: "برنامج حج",
+    days: "20 يوم",
+    date: "15 مايو 2026",
+    image: "https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=1000&q=85",
+    airline: "مصر للطيران",
+    route: ["القاهرة", "جدة", "مكة", "المدينة", "القاهرة"],
+    hotels: [
+      { name: "أبراج مكة", label: "سكن مكة المكرمة", nights: 14 },
+      { name: "فندق الإيمان", label: "سكن المدينة المنورة", nights: 5 }
+    ],
+    prices: { quad: "150,000", triple: "170,000", double: "190,000" }
+  },
+  {
+    id: 5,
+    title: "برنامج الحج المميز (5 نجوم)",
+    badge: "برنامج حج",
+    days: "15 يوم",
+    date: "20 مايو 2026",
+    image: "https://images.unsplash.com/photo-1591604129939-f1efa4d8f56c?auto=format&fit=crop&w=600&q=85",
+    airline: "طيران سعودي",
+    route: ["القاهرة", "جدة", "مكة", "المدينة", "القاهرة"],
+    hotels: [
+      { name: "فيرمونت برج الساعة", label: "سكن مكة المكرمة", nights: 10 },
+      { name: "دار التقوى", label: "سكن المدينة المنورة", nights: 4 }
+    ],
+    prices: { quad: "250,000", triple: "280,000", double: "320,000" }
+  }
+];
+
+// =========================================
+// COMPONENT
+// =========================================
 function App() {
-  // =========================================
-  // 1. STATES
-  // =========================================
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentTrip, setCurrentTrip] = useState(0);
   const [currentReview, setCurrentReview] = useState(0);
   const [activeFaq, setActiveFaq] = useState(0);
   const [formMessage, setFormMessage] = useState({ text: '', type: '' });
 
-  // =========================================
-  // 2. EFFECTS
-  // =========================================
+  // 1. States الخاصة بتبديل الباقات (عمرة / حج)
+  const [packageType, setPackageType] = useState('umrah'); // 'umrah' | 'hajj'
+  const [currentTrip, setCurrentTrip] = useState(0);
+
+  // 2. تحديد المصفوفة النشطة حالياً بناءً على اختيار المستخدم
+  const activeTrips = packageType === 'umrah' ? umrahTripsData : hajjTripsData;
+
   useEffect(() => {
-    // Scroll Event للـ Header
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener("scroll", handleScroll);
 
-    // Auto Slide للتقييمات كل 6 ثواني
     const reviewInterval = setInterval(() => {
       setCurrentReview((prev) => (prev >= 3 ? 0 : prev + 1));
     }, 6000);
@@ -37,18 +118,21 @@ function App() {
     };
   }, []);
 
-  // =========================================
-  // 3. HANDLERS
-  // =========================================
-  const nextTrip = () => setCurrentTrip((prev) => (prev >= 2 ? 0 : prev + 1));
-  const prevTrip = () => setCurrentTrip((prev) => (prev <= 0 ? 2 : prev - 1));
+  // دوال التحكم في سلايدر الرحلات (ديناميكية حسب طول الـ Array النشط)
+  const nextTrip = () => setCurrentTrip((prev) => (prev >= activeTrips.length - 1 ? 0 : prev + 1));
+  const prevTrip = () => setCurrentTrip((prev) => (prev <= 0 ? activeTrips.length - 1 : prev - 1));
+
+  // دالة تغيير التبويب (عمرة / حج)
+  const handlePackageTypeChange = (type) => {
+    setPackageType(type);
+    setCurrentTrip(0); // تصفير السلايدر للبداية عند التبديل
+  };
 
   const nextReviewSlide = () => setCurrentReview((prev) => (prev >= 3 ? 0 : prev + 1));
   const prevReviewSlide = () => setCurrentReview((prev) => (prev <= 0 ? 3 : prev - 1));
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
@@ -58,9 +142,7 @@ function App() {
     }
 
     try {
-      // هنا تضع كود استدعاء الـ API (الـ Endpoint) لاحقاً
-      console.log("Data to send:", data);
-      
+      console.log("Data to API:", data);
       setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
       e.target.reset();
     } catch (error) {
@@ -74,9 +156,7 @@ function App() {
       <header className={`header ${isScrolled ? 'scrolled' : ''}`} id="header">
         <div className="container navbar">
           <a href="#home" className="logo">
-            <span className="logo-icon">
-              <i className="fa-solid fa-kaaba"></i>
-            </span>
+            <span className="logo-icon"><i className="fa-solid fa-kaaba"></i></span>
             <span>
               <strong>صن شرم تورز Sun Sharm Tours</strong>
               <small> للحج والعمرة</small>
@@ -105,120 +185,46 @@ function App() {
       <section className="hero" id="home">
         <div className="hero-overlay"></div>
         <div className="container hero-content">
-          <span className="hero-badge">
-            <i className="fa-solid fa-star"></i> رحلتك إلى بيت الله تبدأ من هنا
-          </span>
-          <h1>
-            للحج والعمرة
-            <span>بكل راحة وطمأنينة</span>
-          </h1>
-          <p>
-            نقدم لك برامج متكاملة للحج والعمرة، تشمل الإقامة،
-            المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز
-            حتى العودة إلى أرض الوطن.
-          </p>
+          <span className="hero-badge"><i className="fa-solid fa-star"></i> رحلتك إلى بيت الله تبدأ من هنا</span>
+          <h1>للحج والعمرة <span>بكل راحة وطمأنينة</span></h1>
+          <p>نقدم لك برامج متكاملة للحج والعمرة، تشمل الإقامة، المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز حتى العودة إلى أرض الوطن.</p>
           <div className="hero-actions">
-            <a href="#packages" className="btn btn-primary">
-              اكتشف برامجنا
-              <i className="fa-solid fa-arrow-left"></i>
-            </a>
-            <a href="#contact" className="btn btn-outline">
-              تواصل معنا
-              <i className="fa-brands fa-whatsapp"></i>
-            </a>
+            <a href="#packages" className="btn btn-primary">اكتشف برامجنا <i className="fa-solid fa-arrow-left"></i></a>
+            <a href="#contact" className="btn btn-outline">تواصل معنا <i className="fa-brands fa-whatsapp"></i></a>
           </div>
           <div className="hero-stats">
-            <div className="stat">
-              <strong>15+</strong>
-              <span>عاماً من الخبرة</span>
-            </div>
-            <div className="stat">
-              <strong>12K+</strong>
-              <span>معتمر وحاج</span>
-            </div>
-            <div className="stat">
-              <strong>98%</strong>
-              <span>رضا العملاء</span>
-            </div>
-            <div className="stat">
-              <strong>24/7</strong>
-              <span>خدمة العملاء</span>
-            </div>
+            <div className="stat"><strong>15+</strong><span>عاماً من الخبرة</span></div>
+            <div className="stat"><strong>12K+</strong><span>معتمر وحاج</span></div>
+            <div className="stat"><strong>98%</strong><span>رضا العملاء</span></div>
+            <div className="stat"><strong>24/7</strong><span>خدمة العملاء</span></div>
           </div>
         </div>
       </section>
 
       {/* ========================= ABOUT ========================= */}
       <section className="about section" id="about">
+        {/* الكود لم يتغير */}
         <div className="container">
           <div className="section-heading">
             <span>من نحن</span>
-            <h2>
-              نجعل رحلتك إلى
-              <strong>بيت الله أسهل</strong>
-            </h2>
-            <p>
-              نحن في صن شرم تورز نؤمن أن رحلة الحج والعمرة ليست مجرد سفر،
-              بل تجربة روحانية تستحق أفضل تنظيم وأعلى مستوى من الراحة.
-            </p>
+            <h2>نجعل رحلتك إلى <strong>بيت الله أسهل</strong></h2>
+            <p>نحن في صن شرم تورز نؤمن أن رحلة الحج والعمرة ليست مجرد سفر، بل تجربة روحانية تستحق أفضل تنظيم وأعلى مستوى من الراحة.</p>
           </div>
           <div className="about-grid">
             <div className="about-images">
-              <div className="image-main">
-                <img src="https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=1000&q=85" alt="مكة المكرمة" />
-              </div>
-              <div className="experience-card">
-                <strong>15+</strong>
-                <span>سنة من الخبرة</span>
-              </div>
-              <div className="image-small">
-                <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d8f56c?auto=format&fit=crop&w=600&q=85" alt="المسجد النبوي" />
-              </div>
+              <div className="image-main"><img src="https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=1000&q=85" alt="مكة المكرمة" /></div>
+              <div className="experience-card"><strong>15+</strong><span>سنة من الخبرة</span></div>
+              <div className="image-small"><img src="https://images.unsplash.com/photo-1591604129939-f1efa4d8f56c?auto=format&fit=crop&w=600&q=85" alt="المسجد النبوي" /></div>
             </div>
             <div className="about-content">
               <span className="small-title">لماذا صن شرم تورز؟</span>
-              <h3>
-                معنا تبدأ رحلتك
-                <span>بالثقة والطمأنينة</span>
-              </h3>
-              <p>
-                نعمل على توفير كل ما تحتاجه خلال رحلة الحج والعمرة،
-                بداية من اختيار البرنامج المناسب، مروراً بإجراءات
-                السفر والإقامة والمواصلات، وصولاً إلى المتابعة
-                المستمرة أثناء الرحلة.
-              </p>
-              <p>
-                هدفنا هو أن تتفرغ لعبادتك بينما نهتم نحن بكل تفاصيل الرحلة.
-              </p>
+              <h3>معنا تبدأ رحلتك <span>بالثقة والطمأنينة</span></h3>
+              <p>نعمل على توفير كل ما تحتاجه خلال رحلة الحج والعمرة...</p>
               <div className="features">
-                <div className="feature">
-                  <div className="feature-icon"><i className="fa-solid fa-shield-halved"></i></div>
-                  <div>
-                    <h4>خدمة موثوقة</h4>
-                    <p>خبرة طويلة وفريق متخصص.</p>
-                  </div>
-                </div>
-                <div className="feature">
-                  <div className="feature-icon"><i className="fa-solid fa-hotel"></i></div>
-                  <div>
-                    <h4>فنادق مختارة</h4>
-                    <p>إقامة مريحة بالقرب من الحرم.</p>
-                  </div>
-                </div>
-                <div className="feature">
-                  <div className="feature-icon"><i className="fa-solid fa-headset"></i></div>
-                  <div>
-                    <h4>دعم مستمر</h4>
-                    <p>معك طوال فترة الرحلة.</p>
-                  </div>
-                </div>
-                <div className="feature">
-                  <div className="feature-icon"><i className="fa-solid fa-car"></i></div>
-                  <div>
-                    <h4>مواصلات منظمة</h4>
-                    <p>تنقلات آمنة ومريحة.</p>
-                  </div>
-                </div>
+                <div className="feature"><div className="feature-icon"><i className="fa-solid fa-shield-halved"></i></div><div><h4>خدمة موثوقة</h4><p>خبرة طويلة وفريق متخصص.</p></div></div>
+                <div className="feature"><div className="feature-icon"><i className="fa-solid fa-hotel"></i></div><div><h4>فنادق مختارة</h4><p>إقامة مريحة بالقرب من الحرم.</p></div></div>
+                <div className="feature"><div className="feature-icon"><i className="fa-solid fa-headset"></i></div><div><h4>دعم مستمر</h4><p>معك طوال فترة الرحلة.</p></div></div>
+                <div className="feature"><div className="feature-icon"><i className="fa-solid fa-car"></i></div><div><h4>مواصلات منظمة</h4><p>تنقلات آمنة ومريحة.</p></div></div>
               </div>
             </div>
           </div>
@@ -230,60 +236,43 @@ function App() {
         <div className="container">
           <div className="section-heading centered">
             <span>خدماتنا</span>
-            <h2>
-              كل ما تحتاجه
-              <strong>في رحلة واحدة</strong>
-            </h2>
-            <p>نهتم بأدق التفاصيل حتى تحصل على رحلة مريحة ومنظمة.</p>
+            <h2>كل ما تحتاجه <strong>في رحلة واحدة</strong></h2>
           </div>
           <div className="services-grid">
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-kaaba"></i></div>
-              <h3>برامج العمرة</h3>
-              <p>برامج عمرة متنوعة تناسب احتياجاتك وميزانيتك.</p>
-              <a href="#packages">اكتشف البرامج <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-mosque"></i></div>
-              <h3>برامج الحج</h3>
-              <p>برامج حج متكاملة مع تنظيم ومتابعة طوال الرحلة.</p>
-              <a href="#packages">اكتشف البرامج <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-hotel"></i></div>
-              <h3>حجز الفنادق</h3>
-              <p>فنادق مميزة في مكة والمدينة بمواقع مختارة بعناية.</p>
-              <a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-plane"></i></div>
-              <h3>تذاكر الطيران</h3>
-              <p>مساعدتك في حجز رحلات الطيران المناسبة لموعد سفرك.</p>
-              <a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-bus"></i></div>
-              <h3>المواصلات</h3>
-              <p>خدمة نقل مريحة وآمنة بين المطارات والفنادق والمشاعر.</p>
-              <a href="#contact">اعرف المزيد <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
-            <article className="service-card">
-              <div className="service-icon"><i className="fa-solid fa-passport"></i></div>
-              <h3>التأشيرات</h3>
-              <p>مساعدتك في استكمال إجراءات السفر والتأشيرة.</p>
-              <a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a>
-            </article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-kaaba"></i></div><h3>برامج العمرة</h3><a href="#packages">اكتشف البرامج <i className="fa-solid fa-arrow-left"></i></a></article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-mosque"></i></div><h3>برامج الحج</h3><a href="#packages">اكتشف البرامج <i className="fa-solid fa-arrow-left"></i></a></article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-hotel"></i></div><h3>حجز الفنادق</h3><a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a></article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-plane"></i></div><h3>تذاكر الطيران</h3><a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a></article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-bus"></i></div><h3>المواصلات</h3><a href="#contact">اعرف المزيد <i className="fa-solid fa-arrow-left"></i></a></article>
+            <article className="service-card"><div className="service-icon"><i className="fa-solid fa-passport"></i></div><h3>التأشيرات</h3><a href="#contact">استفسر الآن <i className="fa-solid fa-arrow-left"></i></a></article>
           </div>
         </div>
       </section>
 
-      {/* ========================= PACKAGES ========================= */}
+      {/* ========================= PACKAGES (Dynamic Tabs & Slider) ========================= */}
       <section className="trips section light-bg" id="packages">
         <div className="container">
           <div className="section-heading centered">
             <span>رحلاتنا</span>
             <h2>اختر <strong>رحلتك قبل أن تبدأ</strong></h2>
-            <p>تعرّف على أهم محطات رحلاتنا وخدماتنا التي نقدمها لضيوف الرحمن.</p>
+          </div>
+
+          {/* تبويبات (Switch) الحج والعمرة */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '40px' }}>
+            <button 
+              className={`btn ${packageType === 'umrah' ? 'btn-primary' : 'btn-outline'}`} 
+              onClick={() => handlePackageTypeChange('umrah')}
+              style={{ padding: '10px 40px' }}
+            >
+              برامج العمرة
+            </button>
+            <button 
+              className={`btn ${packageType === 'hajj' ? 'btn-primary' : 'btn-outline'}`} 
+              onClick={() => handlePackageTypeChange('hajj')}
+              style={{ padding: '10px 40px' }}
+            >
+              برامج الحج
+            </button>
           </div>
 
           <div className="trips-wrapper">
@@ -292,316 +281,110 @@ function App() {
             </button>
 
             <div className="trips-slider">
-              {/* ========================= TRIP 1 ========================= */}
-              <article className={`trip-card ${currentTrip === 0 ? 'active' : ''}`} style={{ display: currentTrip === 0 ? 'block' : 'none' }}>
-                <div className="trip-image">
-                  <img src="https://rihlatravel.com/assets/upload/seo/NeU21BZv60y8JH4Vwa5d0tdQABr3Xl.webp" alt="برنامج العمرة" />
-                  <div className="trip-image-overlay">
-                    <span className="trip-badge">برنامج عمرة</span>
-                    <span className="trip-days">15 يوم</span>
-                  </div>
-                </div>
-                <div className="trip-content">
-                  <div className="trip-title-row">
-                    <div>
-                      <div className="program-start-date">
-                        <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
-                        <div className="start-date-info">
-                          <span>تاريخ بداية الرحلة</span>
-                          <strong>8 سبتمبر 2026</strong>
-                        </div>
-                      </div>
-                      <h3>برنامج عمرة 15 يوم</h3>
-                    </div>
-                    <div className="airline">
-                      <i className="fa-solid fa-plane"></i>
-                      <span>طيران سعودي</span>
+              {/* رسم الرحلات بناءً على البيانات (Map) */}
+              {activeTrips.map((trip, index) => (
+                <article 
+                  key={trip.id} 
+                  className={`trip-card ${currentTrip === index ? 'active' : ''}`} 
+                  style={{ display: currentTrip === index ? 'block' : 'none' }}
+                >
+                  <div className="trip-image">
+                    <img src={trip.image} alt={trip.title} />
+                    <div className="trip-image-overlay">
+                      <span className="trip-badge">{trip.badge}</span>
+                      <span className="trip-days">{trip.days}</span>
                     </div>
                   </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-route"></i><span>خط السير</span>
-                    </div>
-                    <div className="route">
-                      <span>القاهرة</span><i className="fa-solid fa-plane"></i>
-                      <span>جدة</span><i className="fa-solid fa-plane"></i>
-                      <span>المدينة المنورة</span><i className="fa-solid fa-plane"></i>
-                      <span>القاهرة</span>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
-                    </div>
-                    <div className="hotel-grid">
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن مكة المكرمة</span>
-                          <strong className="hotel-name">صفوة البيت</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 11 من الليالي</span>
+                  <div className="trip-content">
+                    <div className="trip-title-row">
+                      <div>
+                        <div className="program-start-date">
+                          <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
+                          <div className="start-date-info">
+                            <span>تاريخ بداية الرحلة</span>
+                            <strong>{trip.date}</strong>
                           </div>
                         </div>
+                        <h3>{trip.title}</h3>
                       </div>
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن المدينة المنورة</span>
-                          <strong className="hotel-name">فندق مركزية</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 3 من الليالي</span>
+                      <div className="airline">
+                        <i className="fa-solid fa-plane"></i>
+                        <span>{trip.airline}</span>
+                      </div>
+                    </div>
+
+                    <div className="program-section">
+                      <div className="program-section-title">
+                        <i className="fa-solid fa-route"></i><span>خط السير</span>
+                      </div>
+                      <div className="route">
+                        {trip.route.map((city, idx) => (
+                          <React.Fragment key={idx}>
+                            <span>{city}</span>
+                            {idx < trip.route.length - 1 && <i className="fa-solid fa-plane"></i>}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="program-section">
+                      <div className="program-section-title">
+                        <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
+                      </div>
+                      <div className="hotel-grid">
+                        {trip.hotels.map((hotel, idx) => (
+                          <div key={idx} className="hotel-card">
+                            <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
+                            <div className="hotel-info">
+                              <span className="hotel-label">{hotel.label}</span>
+                              <strong className="hotel-name">{hotel.name}</strong>
+                              <div className="hotel-bottom">
+                                <span className="hotel-nights"><i className="fa-regular fa-moon"></i> {hotel.nights} ليالي</span>
+                              </div>
+                            </div>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="program-section">
+                      <div className="program-section-title">
+                        <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
+                      </div>
+                      <div className="prices-grid">
+                        <div className="price-card">
+                          <span>رباعي</span><strong>{trip.prices.quad}</strong><small>جنيه مصري</small>
+                        </div>
+                        <div className="price-card">
+                          <span>ثلاثي</span><strong>{trip.prices.triple}</strong><small>جنيه مصري</small>
+                        </div>
+                        <div className="price-card featured-price">
+                          <span>ثنائي</span><strong>{trip.prices.double}</strong><small>جنيه مصري</small>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
-                    </div>
-                    <div className="prices-grid">
-                      <div className="price-card">
-                        <span>رباعي</span><strong>41,500</strong><small>جنيه مصري</small>
+                    <div className="program-section">
+                      <div className="program-section-title">
+                        <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
                       </div>
-                      <div className="price-card">
-                        <span>ثلاثي</span><strong>44,500</strong><small>جنيه مصري</small>
-                      </div>
-                      <div className="price-card featured-price">
-                        <span>ثنائي</span><strong>47,500</strong><small>جنيه مصري</small>
+                      <div className="included-grid">
+                        <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
+                        <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة {packageType === 'umrah' ? 'عمرة' : 'حج'}</span></div>
+                        <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
+                        <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء</span></div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
-                    </div>
-                    <div className="included-grid">
-                      <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
-                      <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة عمرة</span></div>
-                      <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
-                      <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء على مدار الساعة</span></div>
-                    </div>
-                  </div>
-
-                  <div className="trip-footer">
-                    <div className="trip-footer-info">
-                      <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة 15 يوم</span>
-                    </div>
-                    <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
-                  </div>
-                </div>
-              </article>
-
-              {/* ========================= TRIP 2 ========================= */}
-              <article className={`trip-card ${currentTrip === 1 ? 'active' : ''}`} style={{ display: currentTrip === 1 ? 'block' : 'none' }}>
-                <div className="trip-image">
-                  <img src="img/img2.jpeg" alt="برنامج العمرة" />
-                  <div className="trip-image-overlay">
-                    <span className="trip-badge">برنامج عمرة</span>
-                    <span className="trip-days">15 يوم</span>
-                  </div>
-                </div>
-                <div className="trip-content">
-                  <div className="trip-title-row">
-                    <div>
-                      <div className="program-start-date">
-                        <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
-                        <div className="start-date-info">
-                          <span>تاريخ بداية الرحلة</span>
-                          <strong>12 سبتمبر 2026</strong>
-                        </div>
+                    <div className="trip-footer">
+                      <div className="trip-footer-info">
+                        <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة {trip.days}</span>
                       </div>
-                      <h3>برنامج عمرة 15 يوم</h3>
-                    </div>
-                    <div className="airline">
-                      <i className="fa-solid fa-plane"></i>
-                      <span>طيران اير كايرو</span>
+                      <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
                     </div>
                   </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-route"></i><span>خط السير</span>
-                    </div>
-                    <div className="route">
-                      <span>القاهرة</span><i className="fa-solid fa-plane"></i>
-                      <span>جدة</span><i className="fa-solid fa-plane"></i>
-                      <span>القاهرة</span>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
-                    </div>
-                    <div className="hotel-grid">
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن مكة المكرمة</span>
-                          <strong className="hotel-name">صفوة البيت</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 11 من الليالي</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن المدينة المنورة</span>
-                          <strong className="hotel-name">فندق مركزية</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 3 من الليالي</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
-                    </div>
-                    <div className="prices-grid">
-                      <div className="price-card">
-                        <span>رباعي</span><strong>39,500</strong><small>جنيه مصري</small>
-                      </div>
-                      <div className="price-card">
-                        <span>ثلاثي</span><strong>42,500</strong><small>جنيه مصري</small>
-                      </div>
-                      <div className="price-card featured-price">
-                        <span>ثنائي</span><strong>45,500</strong><small>جنيه مصري</small>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
-                    </div>
-                    <div className="included-grid">
-                      <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
-                      <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة عمرة</span></div>
-                      <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
-                      <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء على مدار الساعة</span></div>
-                    </div>
-                  </div>
-
-                  <div className="trip-footer">
-                    <div className="trip-footer-info">
-                      <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة 15 يوم</span>
-                    </div>
-                    <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
-                  </div>
-                </div>
-              </article>
-
-              {/* ========================= TRIP 3 ========================= */}
-              <article className={`trip-card ${currentTrip === 2 ? 'active' : ''}`} style={{ display: currentTrip === 2 ? 'block' : 'none' }}>
-                <div className="trip-image">
-                  <img src="img/img3.jpeg" alt="برنامج العمرة" />
-                  <div className="trip-image-overlay">
-                    <span className="trip-badge">برنامج عمرة</span>
-                    <span className="trip-days">15 يوم</span>
-                  </div>
-                </div>
-                <div className="trip-content">
-                  <div className="trip-title-row">
-                    <div>
-                      <div className="program-start-date">
-                        <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
-                        <div className="start-date-info">
-                          <span>تاريخ بداية الرحلة</span>
-                          <strong>8 سبتمبر 2026</strong>
-                        </div>
-                      </div>
-                      <h3>برنامج عمرة 15 يوم</h3>
-                    </div>
-                    <div className="airline">
-                      <i className="fa-solid fa-plane"></i>
-                      <span>طيران اير كايرو</span>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-route"></i><span>خط السير</span>
-                    </div>
-                    <div className="route">
-                      <span>بري</span>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
-                    </div>
-                    <div className="hotel-grid">
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن مكة المكرمة</span>
-                          <strong className="hotel-name">صفوة البيت</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 11 من الليالي</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="hotel-card">
-                        <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                        <div className="hotel-info">
-                          <span className="hotel-label">سكن المدينة المنورة</span>
-                          <strong className="hotel-name">فندق مركزية</strong>
-                          <div className="hotel-bottom">
-                            <span className="hotel-nights"><i className="fa-regular fa-moon"></i> 3 من الليالي</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
-                    </div>
-                    <div className="prices-grid">
-                      <div className="price-card">
-                        <span>رباعي</span><strong>33,000</strong><small>جنيه مصري</small>
-                      </div>
-                      <div className="price-card">
-                        <span>ثلاثي</span><strong>36,000</strong><small>جنيه مصري</small>
-                      </div>
-                      <div className="price-card featured-price">
-                        <span>ثنائي</span><strong>39,000</strong><small>جنيه مصري</small>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="program-section">
-                    <div className="program-section-title">
-                      <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
-                    </div>
-                    <div className="included-grid">
-                      <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
-                      <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة عمرة</span></div>
-                      <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
-                      <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء على مدار الساعة</span></div>
-                    </div>
-                  </div>
-
-                  <div className="trip-footer">
-                    <div className="trip-footer-info">
-                      <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة 15 يوم</span>
-                    </div>
-                    <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
-                  </div>
-                </div>
-              </article>
+                </article>
+              ))}
             </div>
 
             <button className="trip-slider-button next" onClick={nextTrip}>
@@ -610,14 +393,18 @@ function App() {
           </div>
 
           <div className="trip-dots">
-            <button className={`trip-dot ${currentTrip === 0 ? 'active' : ''}`} onClick={() => setCurrentTrip(0)}></button>
-            <button className={`trip-dot ${currentTrip === 1 ? 'active' : ''}`} onClick={() => setCurrentTrip(1)}></button>
-            <button className={`trip-dot ${currentTrip === 2 ? 'active' : ''}`} onClick={() => setCurrentTrip(2)}></button>
+            {activeTrips.map((_, index) => (
+              <button 
+                key={index} 
+                className={`trip-dot ${currentTrip === index ? 'active' : ''}`} 
+                onClick={() => setCurrentTrip(index)}>
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ========================= WHY US ========================= */}
+        {/* ========================= WHY US ========================= */}
       <section className="why-us section light-bg">
         <div className="container">
           <div className="why-grid">
@@ -980,7 +767,7 @@ function App() {
       </footer>
 
       {/* ========================= WhatsApp Floating Button ========================= */}
-      <a href="https://wa.me/201001722692" target="_blank" rel="noreferrer" className="whatsapp-float" aria-label="WhatsApp">
+      <a href="https://wa.me/201001722692?text=السلام%20عليكم،%0Aأرغب%20في%20الاستفسار%20عن%20برامج%20الحج%20والعمرة." target="_blank" rel="noreferrer" className="whatsapp-float" aria-label="WhatsApp">
         <i className="fa-brands fa-whatsapp"></i>
       </a>
     </>

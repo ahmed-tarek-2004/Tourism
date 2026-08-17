@@ -50,7 +50,10 @@ const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentReview, setCurrentReview] = useState(0);
   const [activeFaq, setActiveFaq] = useState(0);
+  
+  // States الخاصة بنموذج التواصل
   const [formMessage, setFormMessage] = useState({ text: '', type: '' });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   const [packageType, setPackageType] = useState('umrah');
   const [currentTrip, setCurrentTrip] = useState(0);
@@ -132,20 +135,50 @@ const Home = () => {
   const nextReviewSlide = () => setCurrentReview((prev) => (prev >= 3 ? 0 : prev + 1));
   const prevReviewSlide = () => setCurrentReview((prev) => (prev <= 0 ? 3 : prev - 1));
 
+  // =========================================
+  // دالة إرسال نموذج التواصل المعدلة
+  // =========================================
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    
+    // تفعيل حالة التحميل وتصفير الرسائل
+    setIsSubmittingContact(true);
+    setFormMessage({ text: "", type: "" });
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
     if (!data.name || !data.phone || !data.message) {
-      setFormMessage({ text: "برجاء ملء البيانات المطلوبة.", type: "error" });
+      setFormMessage({ text: "برجاء ملء البيانات المطلوبة (الاسم، الهاتف، والرسالة).", type: "error" });
+      setIsSubmittingContact(false);
       return;
     }
+
     try {
-      setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
-      e.target.reset();
+      // **تنبيه:** قم بتغيير هذا الرابط إلى الـ Endpoint الخاص بك في الـ Backend
+      const response = await fetch('https://localhost:7165/api/Trip/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data), // إرسال البيانات كـ JSON
+      });
+
+      if (response.ok) {
+        setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
+        e.target.reset(); // تفريغ الحقول بعد النجاح
+        
+        // إخفاء رسالة النجاح بعد 5 ثواني تلقائياً (اختياري)
+        setTimeout(() => setFormMessage({ text: '', type: '' }), 5000);
+      } else {
+        setFormMessage({ text: "حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.", type: "error" });
+      }
     } catch (error) {
-      setFormMessage({ text: "حدث خطأ أثناء الإرسال. حاول مرة أخرى.", type: "error" });
+      console.error("Contact form error:", error);
+      setFormMessage({ text: "حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.", type: "error" });
+    } finally {
+      // إيقاف حالة التحميل في جميع الأحوال
+      setIsSubmittingContact(false);
     }
   };
 
@@ -711,14 +744,50 @@ const Home = () => {
                 <textarea name="message" id="message" rows="5" placeholder="اكتب رسالتك..." required></textarea>
               </div>
 
-              <button type="submit" className="btn btn-primary form-button">
-                إرسال الطلب <i className="fa-solid fa-paper-plane"></i>
+              {/* زر الإرسال المحدث مع مؤشر التحميل */}
+              <button 
+                type="submit" 
+                className="btn btn-primary form-button"
+                disabled={isSubmittingContact}
+                style={{ 
+                    opacity: isSubmittingContact ? 0.7 : 1,
+                    cursor: isSubmittingContact ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                }}
+              >
+                {isSubmittingContact ? (
+                    <>
+                        جاري الإرسال...
+                        <i className="fa-solid fa-spinner fa-spin"></i>
+                    </>
+                ) : (
+                    <>
+                        إرسال الطلب <i className="fa-solid fa-paper-plane"></i>
+                    </>
+                )}
               </button>
 
+              {/* رسالة الإشعار بتصميم مدمج ومنسق */}
               {formMessage.text && (
-                <p className="form-message" style={{ color: formMessage.type === 'error' ? '#c0392b' : '#0d5c4a', marginTop: '10px', fontWeight: 'bold' }}>
-                  {formMessage.text}
-                </p>
+                <div style={{
+                    padding: "15px 20px",
+                    marginTop: "15px",
+                    borderRadius: "10px",
+                    backgroundColor: formMessage.type === "success" ? "var(--primary-light)" : "#ffebee",
+                    color: formMessage.type === "success" ? "var(--primary)" : "#c62828",
+                    border: `1px solid ${formMessage.type === "success" ? "var(--primary)" : "#ef9a9a"}`,
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    fontSize: "13px"
+                }}>
+                    <i className={`fa-solid ${formMessage.type === "success" ? "fa-circle-check" : "fa-triangle-exclamation"}`}></i>
+                    {formMessage.text}
+                </div>
               )}
             </form>
           </div>

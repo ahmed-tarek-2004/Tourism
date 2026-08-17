@@ -9,8 +9,8 @@ const TripForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   
-  // State جديدة للتحكم في رسائل النجاح والخطأ
-  const [formMessage, setFormMessage] = useState({ text: "", type: "" });
+  // غيرنا الـ State عشان تقبل مصفوفة من الرسائل بدل نص واحد
+  const [formMessage, setFormMessage] = useState({ messages: [], type: "" });
 
   const [formData, setFormData] = useState({
     Name: "",
@@ -33,6 +33,27 @@ const TripForm = () => {
     ImageUrl: null,
   });
 
+  // ==========================================
+  // دالة لترجمة الأخطاء من الإنجليزية للعربية
+  // ==========================================
+  const translateError = (errorMsg) => {
+    // توحيد حالة الحروف وتجاهل النقط لتسهيل المطابقة
+    const msg = errorMsg.replace(/\./g, "").toLowerCase().trim(); 
+    
+    if (msg.includes("trip name is required")) return "اسم الرحلة مطلوب.";
+    if (msg.includes("duration days must be greater than 0")) return "مدة الرحلة يجب أن تكون أكبر من صفر.";
+    if (msg.includes("start date must be in the future")) return "تاريخ انطلاق الرحلة يجب أن يكون في المستقبل.";
+    if (msg.includes("airline' must not be empty")) return "حقل خطوط الطيران يجب ألا يكون فارغاً.";
+    if (msg.includes("routes are required")) return "يجب إدخال نقطة مسار (خط سير) واحدة على الأقل.";
+    if (msg.includes("makkah hotel is required")) return "اسم فندق مكة مطلوب.";
+    if (msg.includes("makkah nights must be greater than 0")) return "عدد ليالي مكة يجب أن يكون أكبر من صفر.";
+    if (msg.includes("image size must not exceed")) return "حجم الصورة يجب ألا يتجاوز 5 ميجابايت.";
+    if (msg.includes("Only JPG, PNG and WEBP images are allowed")) return "الصيغ المدعومة للصور هي فقط: JPG, PNG, و WEBP.";
+    
+    // إذا كان هناك خطأ غير متوقع، نرجعه كما هو
+    return errorMsg; 
+  };
+
   useEffect(() => {
     if (id) {
       setIsEditMode(true);
@@ -43,9 +64,7 @@ const TripForm = () => {
         .then((result) => {
           if (result.succeeded && result.data) {
             const trip = result.data;
-            
             setCurrentImageUrl(trip.imageUrl || null);
-            
             setFormData({
               Name: trip.name || "",
               DurationDays: trip.durationDays || "",
@@ -109,14 +128,11 @@ const TripForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // تصفير الرسالة عند بداية الإرسال
-    setFormMessage({ text: "", type: "" });
+    // تصفير الرسالة
+    setFormMessage({ messages: [], type: "" });
 
     const submitData = new FormData();
-    
-    if (isEditMode) {
-      submitData.append("Id", id);
-    }
+    if (isEditMode) submitData.append("Id", id);
     
     for (const key in formData) {
       if (key === "Routes") {
@@ -145,35 +161,43 @@ const TripForm = () => {
         body: submitData,
       });
 
-      // محاولة قراءة الـ JSON الخاص بالـ Response سواء في حالة النجاح أو الفشل
       let result = null;
       try {
         result = await response.json();
       } catch (err) {
-        // لو الـ Response مش JSON (مثلاً 500 Internal Server Error)
         result = null;
       }
 
       if (response.ok) {
-         // عرض رسالة النجاح (سواء من الـ API أو رسالة افتراضية)
          setFormMessage({ 
-           text: result?.message || (isEditMode ? "تم تعديل الرحلة بنجاح!" : "تم إضافة الرحلة بنجاح!"), 
+           messages: [isEditMode ? "تم تعديل الرحلة بنجاح!" : "تم إضافة الرحلة بنجاح!"], 
            type: "success" 
          });
          
-         // تأخير التوجيه لمدة ثانية ونصف عشان اليوزر يلحق يقرأ رسالة النجاح
          setTimeout(() => {
            navigate('/admin/trips'); 
          }, 1500);
          
       } else {
-         // استخراج رسالة الخطأ من الـ API، أو عرض رسالة افتراضية
-         const errorMessage = result?.message || result?.title || "حدث خطأ أثناء حفظ البيانات. يرجى مراجعة البيانات المدخلة.";
-         setFormMessage({ text: errorMessage, type: "error" });
+         // استخراج ومعالجة رسائل الخطأ من الـ API
+         let errorsList = [];
+         
+         if (result && result.detail) {
+           // تقسيم النص بناءً على الفاصلة
+           const rawErrors = result.detail.split(",");
+           // ترجمة وإزالة التكرارات
+           errorsList = [...new Set(rawErrors.map(err => translateError(err.trim())).filter(err => err !== ""))];
+         } else if (result && result.message) {
+           errorsList = [result.message];
+         } else {
+           errorsList = ["حدث خطأ أثناء حفظ البيانات. يرجى مراجعة البيانات المدخلة."];
+         }
+         
+         setFormMessage({ messages: errorsList, type: "error" });
       }
     } catch (error) {
        console.error("Submit Error:", error);
-       setFormMessage({ text: "حدث خطأ في الاتصال بالخادم. يرجى التأكد من عمل الـ API.", type: "error" });
+       setFormMessage({ messages: ["حدث خطأ في الاتصال بالخادم. يرجى التأكد من عمل الـ API."], type: "error" });
     }
   };
 
@@ -344,19 +368,27 @@ const TripForm = () => {
             <input type="file" name="ImageUrl" onChange={handleFileChange} accept="image/*" style={{ background: "transparent", border: "1px dashed var(--primary)", padding: "20px" }} />
           </div>
 
-          {/* --- عرض رسائل النجاح والخطأ --- */}
-          {formMessage.text && (
+          {/* --- عرض رسائل النجاح والخطأ بشكل منسق ومترجم --- */}
+          {formMessage.messages.length > 0 && (
             <div style={{
-              padding: "15px 20px",
-              marginTop: "10px",
-              borderRadius: "10px",
+              padding: "20px",
+              marginTop: "20px",
+              borderRadius: "12px",
               backgroundColor: formMessage.type === "success" ? "var(--primary-light)" : "#ffebee",
               color: formMessage.type === "success" ? "var(--primary)" : "#c62828",
               border: `1px solid ${formMessage.type === "success" ? "var(--primary)" : "#ef9a9a"}`,
-              fontWeight: "bold",
-              textAlign: "center"
+              textAlign: "right"
             }}>
-              {formMessage.text}
+              <h4 style={{ margin: "0 0 10px 0", fontSize: "15px", fontWeight: "bold" }}>
+                {formMessage.type === "success" ? "نجاح!" : "يرجى مراجعة الأخطاء التالية:"}
+              </h4>
+              <ul style={{ margin: 0, paddingRight: "25px" }}>
+                {formMessage.messages.map((msg, index) => (
+                  <li key={index} style={{ marginBottom: "5px", fontSize: "13px", fontWeight: "600" }}>
+                    {msg}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

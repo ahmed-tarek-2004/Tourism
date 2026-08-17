@@ -2,56 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './style.css';
 
 // =========================================
-// 1. DATA (محاكاة للبيانات اللي هترجع من الـ API)
+// 1. DATA (بيانات الحج الثابتة كما هي)
 // =========================================
-const umrahTripsData = [
-  {
-    id: 1,
-    title: "برنامج عمرة 15 يوم",
-    badge: "برنامج عمرة",
-    days: "15 يوم",
-    date: "8 سبتمبر 2026",
-    image: "https://rihlatravel.com/assets/upload/seo/NeU21BZv60y8JH4Vwa5d0tdQABr3Xl.webp",
-    airline: "طيران سعودي",
-    route: ["القاهرة", "جدة", "المدينة المنورة", "القاهرة"],
-    hotels: [
-      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
-      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
-    ],
-    prices: { quad: "41,500", triple: "44,500", double: "47,500" }
-  },
-  {
-    id: 2,
-    title: "برنامج عمرة 15 يوم",
-    badge: "برنامج عمرة",
-    days: "15 يوم",
-    date: "12 سبتمبر 2026",
-    image: "img/img2.jpeg",
-    airline: "طيران اير كايرو",
-    route: ["القاهرة", "جدة", "القاهرة"],
-    hotels: [
-      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
-      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
-    ],
-    prices: { quad: "39,500", triple: "42,500", double: "45,500" }
-  },
-  {
-    id: 3,
-    title: "برنامج عمرة 15 يوم (بري)",
-    badge: "برنامج عمرة",
-    days: "15 يوم",
-    date: "8 سبتمبر 2026",
-    image: "img/img3.jpeg",
-    airline: "نقل بري فاخر",
-    route: ["بري"],
-    hotels: [
-      { name: "صفوة البيت", label: "سكن مكة المكرمة", nights: 11 },
-      { name: "فندق مركزية", label: "سكن المدينة المنورة", nights: 3 }
-    ],
-    prices: { quad: "33,000", triple: "36,000", double: "39,000" }
-  }
-];
-
 const hajjTripsData = [
   {
     id: 4,
@@ -85,6 +37,12 @@ const hajjTripsData = [
   }
 ];
 
+// دالة مساعدة لتنسيق التاريخ بالعربية
+const formatDateArabic = (dateString) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+};
+
 // =========================================
 // COMPONENT
 // =========================================
@@ -99,9 +57,58 @@ function App() {
   const [packageType, setPackageType] = useState('umrah'); // 'umrah' | 'hajj'
   const [currentTrip, setCurrentTrip] = useState(0);
 
-  // 2. تحديد المصفوفة النشطة حالياً بناءً على اختيار المستخدم
-  const activeTrips = packageType === 'umrah' ? umrahTripsData : hajjTripsData;
+  // 2. States الخاصة ببيانات الـ API
+  const [apiUmrahTrips, setApiUmrahTrips] = useState([]);
+  const [isLoadingTrips, setIsLoadingTrips] = useState(true);
 
+  // جلب البيانات من الـ API
+  useEffect(() => {
+
+    const fetchUmrahTrips = async () => {
+      try {
+        console.log(" NEW APP VERSIONnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
+        const response = await fetch('https://localhost:7165/api/Trip/all');
+        const result = await response.json();
+
+        if (result.succeeded && result.data) {
+          // تحويل شكل البيانات من الـ API لتناسب الـ UI
+          const transformedTrips = result.data.map((trip, index) => ({
+            id: trip.id || index,
+            title: trip.name,
+            badge: "برنامج عمرة",
+            days: `${trip.durationDays} يوم`,
+            date: formatDateArabic(trip.startDate),
+            image: trip.imageUrl,
+            airline: trip.transportationType === "Air"
+              ? trip.airline === "Saudia"
+                ? "طيران سعودي"
+                : "طيران مصري"
+              : "بري",
+            route: trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
+              ? trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
+              : ["بري"], // حماية في حال كان المسار null
+            hotels: [
+              { name: trip.makkahHotel || "غير محدد", label: "سكن مكة المكرمة", nights: trip.makkahNights || 0 },
+              { name: trip.madinahHotel || "غير محدد", label: "سكن المدينة المنورة", nights: trip.madinahNights || 0 }
+            ],
+            prices: {
+              quad: trip.quadruplePrice ?? "غير متاح",
+              triple: trip.triplePrice ?? "غير متاح",
+              double: trip.doublePrice ?? "غير متاح"
+            }
+          }));
+
+          setApiUmrahTrips(transformedTrips);
+        }
+      } catch (error) {
+        console.error("Error fetching trips:", error);
+      } finally {
+        setIsLoadingTrips(false);
+      }
+    };
+
+    fetchUmrahTrips();
+  }, []);
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -118,7 +125,10 @@ function App() {
     };
   }, []);
 
-  // دوال التحكم في سلايدر الرحلات (ديناميكية حسب طول الـ Array النشط)
+  // 3. تحديد المصفوفة النشطة حالياً بناءً على اختيار المستخدم
+  const activeTrips = packageType === 'umrah' ? apiUmrahTrips : hajjTripsData;
+
+  // دوال التحكم في سلايدر الرحلات
   const nextTrip = () => setCurrentTrip((prev) => (prev >= activeTrips.length - 1 ? 0 : prev + 1));
   const prevTrip = () => setCurrentTrip((prev) => (prev <= 0 ? activeTrips.length - 1 : prev - 1));
 
@@ -133,6 +143,7 @@ function App() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    // (باقي كود الفورم كما هو)
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
@@ -140,16 +151,13 @@ function App() {
       setFormMessage({ text: "برجاء ملء البيانات المطلوبة.", type: "error" });
       return;
     }
-
     try {
-      console.log("Data to API:", data);
       setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
       e.target.reset();
     } catch (error) {
       setFormMessage({ text: "حدث خطأ أثناء الإرسال. حاول مرة أخرى.", type: "error" });
     }
   };
-
   return (
     <>
       {/* ========================= HEADER ========================= */}
@@ -250,6 +258,7 @@ function App() {
       </section>
 
       {/* ========================= PACKAGES (Dynamic Tabs & Slider) ========================= */}
+
       <section className="trips section light-bg" id="packages">
         <div className="container">
           <div className="section-heading centered">
@@ -259,15 +268,15 @@ function App() {
 
           {/* تبويبات (Switch) الحج والعمرة */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '40px' }}>
-            <button 
-              className={`btn ${packageType === 'umrah' ? 'btn-primary' : 'btn-outline'}`} 
+            <button
+              className={`btn ${packageType === 'umrah' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => handlePackageTypeChange('umrah')}
               style={{ padding: '10px 40px' }}
             >
               برامج العمرة
             </button>
-            <button 
-              className={`btn ${packageType === 'hajj' ? 'btn-primary' : 'btn-outline'}`} 
+            <button
+              className={`btn ${packageType === 'hajj' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => handlePackageTypeChange('hajj')}
               style={{ padding: '10px 40px' }}
             >
@@ -275,136 +284,149 @@ function App() {
             </button>
           </div>
 
-          <div className="trips-wrapper">
-            <button className="trip-slider-button prev" onClick={prevTrip}>
-              <i className="fa-solid fa-arrow-right"></i>
-            </button>
+          {/* التحقق إذا كانت البيانات قيد التحميل */}
+          {packageType === 'umrah' && isLoadingTrips ? (
+            <div style={{ textAlign: 'center', padding: '50px 0', fontSize: '1.2rem', color: '#0d5c4a' }}>
+              <i className="fa-solid fa-spinner fa-spin"></i> جاري تحميل رحلات العمرة...
+            </div>
+          ) : activeTrips.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '50px 0', fontSize: '1.2rem' }}>
+              لا توجد رحلات متاحة في الوقت الحالي.
+            </div>
+          ) : (
+            <div className="trips-wrapper">
+              <button className="trip-slider-button prev" onClick={prevTrip}>
+                <i className="fa-solid fa-arrow-right"></i>
+              </button>
 
-            <div className="trips-slider">
-              {/* رسم الرحلات بناءً على البيانات (Map) */}
-              {activeTrips.map((trip, index) => (
-                <article 
-                  key={trip.id} 
-                  className={`trip-card ${currentTrip === index ? 'active' : ''}`} 
-                  style={{ display: currentTrip === index ? 'block' : 'none' }}
-                >
-                  <div className="trip-image">
-                    <img src={trip.image} alt={trip.title} />
-                    <div className="trip-image-overlay">
-                      <span className="trip-badge">{trip.badge}</span>
-                      <span className="trip-days">{trip.days}</span>
-                    </div>
-                  </div>
-                  <div className="trip-content">
-                    <div className="trip-title-row">
-                      <div>
-                        <div className="program-start-date">
-                          <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
-                          <div className="start-date-info">
-                            <span>تاريخ بداية الرحلة</span>
-                            <strong>{trip.date}</strong>
-                          </div>
-                        </div>
-                        <h3>{trip.title}</h3>
-                      </div>
-                      <div className="airline">
-                        <i className="fa-solid fa-plane"></i>
-                        <span>{trip.airline}</span>
+              <div className="trips-slider">
+                {activeTrips.map((trip, index) => (
+                  <article
+                    key={trip.id}
+                    className={`trip-card ${currentTrip === index ? 'active' : ''}`}
+                    style={{ display: currentTrip === index ? 'block' : 'none' }}
+                  >
+                    <div className="trip-image">
+                      <img src={trip.image} alt={trip.title} />
+                      <div className="trip-image-overlay">
+                        <span className="trip-badge">{trip.badge}</span>
+                        <span className="trip-days">{trip.days}</span>
                       </div>
                     </div>
-
-                    <div className="program-section">
-                      <div className="program-section-title">
-                        <i className="fa-solid fa-route"></i><span>خط السير</span>
-                      </div>
-                      <div className="route">
-                        {trip.route.map((city, idx) => (
-                          <React.Fragment key={idx}>
-                            <span>{city}</span>
-                            {idx < trip.route.length - 1 && <i className="fa-solid fa-plane"></i>}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="program-section">
-                      <div className="program-section-title">
-                        <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
-                      </div>
-                      <div className="hotel-grid">
-                        {trip.hotels.map((hotel, idx) => (
-                          <div key={idx} className="hotel-card">
-                            <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
-                            <div className="hotel-info">
-                              <span className="hotel-label">{hotel.label}</span>
-                              <strong className="hotel-name">{hotel.name}</strong>
-                              <div className="hotel-bottom">
-                                <span className="hotel-nights"><i className="fa-regular fa-moon"></i> {hotel.nights} ليالي</span>
-                              </div>
+                    <div className="trip-content">
+                      <div className="trip-title-row">
+                        <div>
+                          <div className="program-start-date">
+                            <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
+                            <div className="start-date-info">
+                              <span>تاريخ بداية الرحلة</span>
+                              <strong>{trip.date}</strong>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="program-section">
-                      <div className="program-section-title">
-                        <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
-                      </div>
-                      <div className="prices-grid">
-                        <div className="price-card">
-                          <span>رباعي</span><strong>{trip.prices.quad}</strong><small>جنيه مصري</small>
+                          <h3>{trip.title}</h3>
                         </div>
-                        <div className="price-card">
-                          <span>ثلاثي</span><strong>{trip.prices.triple}</strong><small>جنيه مصري</small>
-                        </div>
-                        <div className="price-card featured-price">
-                          <span>ثنائي</span><strong>{trip.prices.double}</strong><small>جنيه مصري</small>
+                        <div className="airline">
+                          <i className="fa-solid fa-plane"></i>
+                          <span>{trip.airline}</span>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="program-section">
-                      <div className="program-section-title">
-                        <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
+                      <div className="program-section">
+                        <div className="program-section-title">
+                          <i className="fa-solid fa-route"></i><span>خط السير</span>
+                        </div>
+                        <div className="route">
+                          {trip.route.map((city, idx) => (
+                            <React.Fragment key={idx}>
+                              <span>{city}</span>
+                              {idx < trip.route.length - 1 && <i className="fa-solid fa-plane"></i>}
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </div>
-                      <div className="included-grid">
-                        <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
-                        <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة {packageType === 'umrah' ? 'عمرة' : 'حج'}</span></div>
-                        <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
-                        <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء</span></div>
-                      </div>
-                    </div>
 
-                    <div className="trip-footer">
-                      <div className="trip-footer-info">
-                        <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة {trip.days}</span>
+                      <div className="program-section">
+                        <div className="program-section-title">
+                          <i className="fa-solid fa-hotel"></i><span>الإقامة</span>
+                        </div>
+                        <div className="hotel-grid">
+                          {trip.hotels.map((hotel, idx) => (
+                            <div key={idx} className="hotel-card">
+                              <div className="hotel-icon"><i className="fa-solid fa-hotel"></i></div>
+                              <div className="hotel-info">
+                                <span className="hotel-label">{hotel.label}</span>
+                                <strong className="hotel-name">{hotel.name}</strong>
+                                <div className="hotel-bottom">
+                                  <span className="hotel-nights"><i className="fa-regular fa-moon"></i> {hotel.nights} ليالي</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
+
+                      <div className="program-section">
+                        <div className="program-section-title">
+                          <i className="fa-solid fa-tags"></i><span>الأسعار للفرد</span>
+                        </div>
+                        <div className="prices-grid">
+                          <div className="price-card">
+                            <span>رباعي</span><strong>{trip.prices.quad}</strong><small>جنيه مصري</small>
+                          </div>
+                          <div className="price-card">
+                            <span>ثلاثي</span><strong>{trip.prices.triple}</strong><small>جنيه مصري</small>
+                          </div>
+                          <div className="price-card featured-price">
+                            <span>ثنائي</span><strong>{trip.prices.double}</strong><small>جنيه مصري</small>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* يمكنك أيضاً دمج الحقول الجديدة مثل includesFlightTickets من الـ API هنا لو أردت جعلها ديناميكية */}
+                      <div className="program-section">
+                        <div className="program-section-title">
+                          <i className="fa-solid fa-hand-holding-heart"></i><span>البرنامج يشمل</span>
+                        </div>
+                        <div className="included-grid">
+                          <div><i className="fa-solid fa-bus"></i><span>تنقلات مريحة</span></div>
+                          <div><i className="fa-solid fa-file-circle-check"></i><span>تأشيرة {packageType === 'umrah' ? 'عمرة' : 'حج'}</span></div>
+                          <div><i className="fa-solid fa-user-group"></i><span>مرشدين متخصصين</span></div>
+                          <div><i className="fa-solid fa-headset"></i><span>خدمة عملاء</span></div>
+                        </div>
+                      </div>
+
+                      <div className="trip-footer">
+                        <div className="trip-footer-info">
+                          <i className="fa-solid fa-calendar-days"></i><span>برنامج متكامل لمدة {trip.days}</span>
+                        </div>
+                        <a href="#contact" className="trip-button">احجز الآن <i className="fa-solid fa-arrow-left"></i></a>
+                      </div>
                     </div>
-                  </div>
-                </article>
+                  </article>
+                ))}
+              </div>
+
+              <button className="trip-slider-button next" onClick={nextTrip}>
+                <i className="fa-solid fa-arrow-left"></i>
+              </button>
+            </div>
+          )}
+
+          {/* Dots Navbar */}
+          {!isLoadingTrips && activeTrips.length > 0 && (
+            <div className="trip-dots">
+              {activeTrips.map((_, index) => (
+                <button
+                  key={index}
+                  className={`trip-dot ${currentTrip === index ? 'active' : ''}`}
+                  onClick={() => setCurrentTrip(index)}>
+                </button>
               ))}
             </div>
-
-            <button className="trip-slider-button next" onClick={nextTrip}>
-              <i className="fa-solid fa-arrow-left"></i>
-            </button>
-          </div>
-
-          <div className="trip-dots">
-            {activeTrips.map((_, index) => (
-              <button 
-                key={index} 
-                className={`trip-dot ${currentTrip === index ? 'active' : ''}`} 
-                onClick={() => setCurrentTrip(index)}>
-              </button>
-            ))}
-          </div>
+          )}
         </div>
       </section>
-
-        {/* ========================= WHY US ========================= */}
+      {/* ========================= WHY US ========================= */}
       <section className="why-us section light-bg">
         <div className="container">
           <div className="why-grid">
@@ -699,7 +721,7 @@ function App() {
                 <label htmlFor="message">رسالتك</label>
                 <textarea name="message" id="message" rows="5" placeholder="اكتب رسالتك..." required></textarea>
               </div>
-              
+
               <button type="submit" className="btn btn-primary form-button">
                 إرسال الطلب <i className="fa-solid fa-paper-plane"></i>
               </button>

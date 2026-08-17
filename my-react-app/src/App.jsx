@@ -66,7 +66,7 @@ function App() {
 
     const fetchUmrahTrips = async () => {
       try {
-        console.log(" NEW APP VERSIONnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
+        // console.log(" NEW APP VERSIONnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
         const response = await fetch('https://localhost:7165/api/Trip/all');
         const result = await response.json();
 
@@ -82,7 +82,7 @@ function App() {
             airline: trip.transportationType === "Air"
               ? trip.airline === "Saudia"
                 ? "طيران سعودي"
-                : "طيران مصري"
+                : "طيران اير كايرو"
               : "بري",
             route: trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
               ? trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
@@ -316,13 +316,23 @@ function App() {
                     <div className="trip-content">
                       <div className="trip-title-row">
                         <div>
+
+
+
                           <div className="program-start-date">
-                            <div className="start-date-icon"><i className="fa-regular fa-calendar-days"></i></div>
+                            <div className="start-date-icon">
+                              <i className="fa-regular fa-calendar-days"></i>
+                            </div>
+
                             <div className="start-date-info">
                               <span>تاريخ بداية الرحلة</span>
                               <strong>{trip.date}</strong>
+                              <small>مدة الرحلة: {trip.days}</small>
                             </div>
                           </div>
+
+
+
                           <h3>{trip.title}</h3>
                         </div>
                         <div className="airline">

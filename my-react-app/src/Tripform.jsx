@@ -158,7 +158,7 @@ const TripForm = () => {
         }
 
         const url = isEditMode
-            ? `https://sunsharm.runasp.net/api/Trip`
+            ? `https://sunsharm.runasp.net/api/Trip/${id}`
             : `https://sunsharm.runasp.net/api/Trip`;
 
         const method = isEditMode ? 'PUT' : 'POST';

@@ -75,11 +75,7 @@ const Home = () => {
             days: `${trip.durationDays} يوم`,
             date: formatDateArabic(trip.startDate),
             image: trip.imageUrl,
-            airline: trip.transportationType === "Air"
-              ? trip.airline === "Saudia"
-                ? "طيران سعودي"
-                : "طيران اير كايرو"
-              : "بري",
+            airline: trip.airline,
             route: trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
               ? trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
               : ["بري"],

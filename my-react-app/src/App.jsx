@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // استيراد الصفحات الخاصة بنا
 import Home from './Home';
 import AdminTrips from './AdminTrips';
-import TripForm from './TripForm'; // الصفحة التي أعددناها في الرد السابق
+import TripForm from './Tripform'; // الصفحة التي أعددناها في الرد السابق
 
 function App() {
   return (

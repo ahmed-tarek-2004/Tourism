@@ -7,6 +7,10 @@ const TripForm = () => {
 
     const [isEditMode, setIsEditMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    
+    // 1. State جديدة للتحكم في حالة الحفظ (لإظهار التحميل)
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const [currentImageUrl, setCurrentImageUrl] = useState(null);
 
     const [formMessage, setFormMessage] = useState({ messages: [], type: "" });
@@ -15,7 +19,7 @@ const TripForm = () => {
         Name: "",
         DurationDays: "",
         StartDate: "",
-        TransportationType: "Air", // القيمة الافتراضية
+        TransportationType: "Air", 
         Airline: "",
         Routes: [{ name: "" }],
         MakkahHotel: "",
@@ -122,6 +126,8 @@ const TripForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // 2. تفعيل حالة التحميل بمجرد بدء الـ Submit
+        setIsSubmitting(true);
         setFormMessage({ messages: [], type: "" });
 
         const submitData = new FormData();
@@ -141,10 +147,10 @@ const TripForm = () => {
             }
             else if (key === "Airline") 
             {
-                // إرسال الحقل فقط إذا كانت الوسيلة طيران
                 if (formData.TransportationType === "Air" && formData.Airline) {
                     submitData.append("Airline", formData.Airline);
                 }
+
             }
             else {
                 submitData.append(key, formData[key]);
@@ -197,6 +203,9 @@ const TripForm = () => {
         } catch (error) {
             console.error("Submit Error:", error);
             setFormMessage({ messages: ["حدث خطأ في الاتصال بالخادم. يرجى التأكد من عمل الـ API."], type: "error" });
+        } finally {
+            // 3. إنهاء حالة التحميل سواء نجح الـ Request أو فشل
+            setIsSubmitting(false);
         }
     };
 
@@ -238,14 +247,12 @@ const TripForm = () => {
                         <div className="form-group">
                             <label>وسيلة النقل (TransportationType)</label>
                             <select name="TransportationType" value={formData.TransportationType} onChange={handleInputChange}>
-                                {/* تم تعديل القيمة هنا لتكون Air */}
                                 <option value="Air">طيران</option>
                                 <option value="Land">برّي</option>
                                 <option value="Ship">بحري</option>
                             </select>
                         </div>
                         
-                        {/* الشرط لإظهار أو إخفاء حقل خطوط الطيران */}
                         {formData.TransportationType === "Air" && (
                             <div className="form-group">
                                 <label>خطوط الطيران (Airline)</label>
@@ -404,10 +411,46 @@ const TripForm = () => {
                     )}
 
                     <div style={{ display: "flex", gap: "15px", marginTop: "30px" }}>
-                        <button type="submit" className="btn btn-primary" style={{ flex: 1, fontSize: "16px" }}>
-                            {isEditMode ? "حفظ التعديلات" : "حفظ الرحلة"}
+                        {/* 4. تغيير شكل الزر وربطه بحالة isSubmitting */}
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary" 
+                            disabled={isSubmitting}
+                            style={{ 
+                                flex: 1, 
+                                fontSize: "16px",
+                                opacity: isSubmitting ? 0.7 : 1,
+                                cursor: isSubmitting ? "not-allowed" : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "8px"
+                            }}
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    جاري الحفظ...
+                                    <i className="fa-solid fa-spinner fa-spin"></i>
+                                </>
+                            ) : (
+                                isEditMode ? "حفظ التعديلات" : "حفظ الرحلة"
+                            )}
                         </button>
-                        <button type="button" onClick={() => navigate('/admin/trips')} className="btn btn-outline" style={{ color: "var(--dark)", borderColor: "var(--border)", padding: "0 25px" }}>
+                        
+                        {/* تعطيل زر الإلغاء أيضاً أثناء التحميل */}
+                        <button 
+                            type="button" 
+                            onClick={() => navigate('/admin/trips')} 
+                            className="btn btn-outline" 
+                            disabled={isSubmitting}
+                            style={{ 
+                                color: "var(--dark)", 
+                                borderColor: "var(--border)", 
+                                padding: "0 25px",
+                                opacity: isSubmitting ? 0.5 : 1,
+                                cursor: isSubmitting ? "not-allowed" : "pointer"
+                            }}
+                        >
                             إلغاء
                         </button>
                     </div>

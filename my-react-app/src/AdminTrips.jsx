@@ -5,6 +5,11 @@ const AdminTrips = () => {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // States للتحكم في نافذة الحذف والرسائل
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, tripId: null });
+  const [actionMessage, setActionMessage] = useState({ text: "", type: "" });
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // جلب الرحلات من الـ API
   useEffect(() => {
     fetchTrips();
@@ -24,31 +29,53 @@ const AdminTrips = () => {
     }
   };
 
-  // دالة الحذف
-  const handleDelete = async (id) => {
-    if (window.confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
-      try {
-        const response = await fetch(`https://localhost:7165/api/Trip/${id}`, {
-          method: 'DELETE',
-        });
+  // دالة فتح نافذة التأكيد
+  const triggerDelete = (id) => {
+    setDeleteModal({ isOpen: true, tripId: id });
+  };
+
+  // دالة إغلاق نافذة التأكيد
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, tripId: null });
+  };
+
+  // الدالة التي تنفذ الحذف الفعلي بعد التأكيد
+  const confirmDelete = async () => {
+    const id = deleteModal.tripId;
+    setIsDeleting(true);
+    setActionMessage({ text: "", type: "" });
+
+    try {
+      const response = await fetch(`https://localhost:7165/api/Trip/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // تحديث القائمة بعد الحذف بنجاح
+        setTrips(trips.filter(trip => trip.id !== id));
+        setActionMessage({ text: "تم حذف الرحلة بنجاح.", type: "success" });
+        setDeleteModal({ isOpen: false, tripId: null }); // إغلاق النافذة
         
-        if (response.ok) {
-          // تحديث القائمة بعد الحذف بنجاح
-          setTrips(trips.filter(trip => trip.id !== id));
-          alert("تم الحذف بنجاح");
-        } else {
-          alert("حدث خطأ أثناء الحذف");
-        }
-      } catch (error) {
-        console.error("Error deleting trip:", error);
+        // إخفاء رسالة النجاح تلقائياً بعد 3 ثوانٍ
+        setTimeout(() => setActionMessage({ text: "", type: "" }), 3000);
+      } else {
+        setDeleteModal({ isOpen: false, tripId: null });
+        setActionMessage({ text: "حدث خطأ أثناء محاولة الحذف.", type: "error" });
       }
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      setDeleteModal({ isOpen: false, tripId: null });
+      setActionMessage({ text: "حدث خطأ في الاتصال بالخادم.", type: "error" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <div className="section light-bg" style={{ minHeight: '100vh' }}>
+    <div className="section light-bg" style={{ minHeight: '100vh', position: 'relative' }}>
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h2>إدارة <strong>الرحلات</strong></h2>
           {/* زر التوجيه لصفحة الإضافة */}
           <Link to="/admin/add-trip" className="btn btn-primary">
@@ -56,8 +83,27 @@ const AdminTrips = () => {
           </Link>
         </div>
 
+        {/* --- رسالة الإشعارات (نجاح أو فشل) --- */}
+        {actionMessage.text && (
+            <div style={{
+                padding: "15px 20px",
+                marginBottom: "20px",
+                borderRadius: "10px",
+                backgroundColor: actionMessage.type === "success" ? "var(--primary-light)" : "#ffebee",
+                color: actionMessage.type === "success" ? "var(--primary)" : "#c62828",
+                border: `1px solid ${actionMessage.type === "success" ? "var(--primary)" : "#ef9a9a"}`,
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px"
+            }}>
+                <i className={`fa-solid ${actionMessage.type === "success" ? "fa-circle-check" : "fa-triangle-exclamation"}`}></i>
+                {actionMessage.text}
+            </div>
+        )}
+
         {isLoading ? (
-          <p style={{ textAlign: 'center' }}>جاري التحميل...</p>
+          <p style={{ textAlign: 'center', padding: '50px' }}>جاري تحميل الرحلات...</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
@@ -80,22 +126,119 @@ const AdminTrips = () => {
                     <td style={{ padding: '15px', color: 'var(--text)' }}>{new Date(trip.startDate).toLocaleDateString('ar-EG')}</td>
                     <td style={{ padding: '15px', color: 'var(--text)' }}>{trip.durationDays} يوم</td>
                     <td style={{ padding: '15px', textAlign: 'center' }}>
-                      {/* زر التعديل (ينقل لصفحة الفورم مع تمرير الـ ID) */}
+                      {/* زر التعديل */}
                       <Link to={`/admin/edit-trip/${trip.id}`} className="btn btn-outline" style={{ background: 'var(--gold-light)', color: 'var(--gold)', borderColor: 'var(--gold-light)', minHeight: '40px', padding: '0 15px', marginLeft: '10px' }}>
                         تعديل
                       </Link>
                       {/* زر الحذف */}
-                      <button onClick={() => handleDelete(trip.id)} className="btn btn-outline" style={{ background: '#ffebee', color: '#c62828', borderColor: '#ffebee', minHeight: '40px', padding: '0 15px' }}>
+                      <button onClick={() => triggerDelete(trip.id)} className="btn btn-outline" style={{ background: '#ffebee', color: '#c62828', borderColor: '#ffebee', minHeight: '40px', padding: '0 15px' }}>
                         حذف
                       </button>
                     </td>
                   </tr>
                 ))}
+                
+                {trips.length === 0 && (
+                  <tr>
+                    <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+                      لا توجد رحلات مضافة حالياً.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         )}
+
       </div>
+
+      {/* =========================================
+         MODAL نافذة تأكيد الحذف المنبثقة
+      ========================================= */}
+      {deleteModal.isOpen && (
+        <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: 'fadeIn 0.3s ease'
+        }}>
+            <div style={{
+                background: '#fff',
+                padding: '35px 30px',
+                borderRadius: '20px',
+                width: '90%',
+                maxWidth: '400px',
+                textAlign: 'center',
+                boxShadow: 'var(--shadow-md)',
+                transform: 'translateY(0)',
+                animation: 'slideUp 0.3s ease'
+            }}>
+                <div style={{ fontSize: '45px', color: '#c62828', marginBottom: '15px' }}>
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 style={{ color: 'var(--dark)', marginBottom: '10px', fontSize: '22px' }}>تأكيد الحذف</h3>
+                <p style={{ color: 'var(--text)', marginBottom: '30px', fontSize: '14px', lineHeight: '1.8' }}>
+                    هل أنت متأكد من رغبتك في حذف هذه الرحلة نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.
+                </p>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                    <button
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        style={{
+                            padding: '12px 20px',
+                            borderRadius: '10px',
+                            background: '#c62828',
+                            color: '#fff',
+                            border: 'none',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            cursor: isDeleting ? 'not-allowed' : 'pointer',
+                            flex: 1,
+                            opacity: isDeleting ? 0.7 : 1
+                        }}
+                    >
+                        {isDeleting ? 'جاري الحذف...' : 'نعم، احذف الرحلة'}
+                    </button>
+                    <button
+                        onClick={cancelDelete}
+                        disabled={isDeleting}
+                        style={{
+                            padding: '12px 20px',
+                            borderRadius: '10px',
+                            background: 'var(--light)',
+                            color: 'var(--dark)',
+                            border: '1px solid var(--border)',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            cursor: isDeleting ? 'not-allowed' : 'pointer',
+                            flex: 1
+                        }}
+                    >
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* إضافة حركات بسيطة للـ Modal */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
     </div>
   );
 };

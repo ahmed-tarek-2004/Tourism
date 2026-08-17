@@ -702,7 +702,7 @@ const Home = () => {
                 <div className="contact-icon"><i className="fa-solid fa-location-dot"></i></div>
                 <div>
                   <span>العنوان</span>
-                  <p>الزقازيق، جمهورية مصر العربية</p>
+                  <p>مكتب رقم 1 مضمار الموتوسيكلات طريق السلام مدخل هالومي شرم الشيخ</p>
                 </div>
               </div>
               <div className="social-links">

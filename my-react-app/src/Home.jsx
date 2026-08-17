@@ -64,7 +64,7 @@ const Home = () => {
   useEffect(() => {
     const fetchUmrahTrips = async () => {
       try {
-        const response = await fetch('https://localhost:7165/api/Trip/all');
+        const response = await fetch('https://sunsharm.runasp.net/api/Trip/all');
         const result = await response.json();
 
         if (result.succeeded && result.data) {
@@ -156,7 +156,7 @@ const Home = () => {
 
     try {
       // **تنبيه:** قم بتغيير هذا الرابط إلى الـ Endpoint الخاص بك في الـ Backend
-      const response = await fetch('https://localhost:7165/api/Trip/contact', {
+      const response = await fetch('https://sunsharm.runasp.net/api/Trip/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

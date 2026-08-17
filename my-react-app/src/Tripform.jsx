@@ -57,7 +57,7 @@ const TripForm = () => {
             setIsEditMode(true);
             setIsLoading(true);
 
-            fetch(`https://localhost:7165/api/Trip/${id}`)
+            fetch(`https://sunsharm.runasp.net/api/Trip/${id}`)
                 .then((response) => response.json())
                 .then((result) => {
                     if (result.succeeded && result.data) {
@@ -158,8 +158,8 @@ const TripForm = () => {
         }
 
         const url = isEditMode
-            ? `https://localhost:7165/api/Trip`
-            : `https://localhost:7165/api/Trip`;
+            ? `https://sunsharm.runasp.net/api/Trip`
+            : `https://sunsharm.runasp.net/api/Trip`;
 
         const method = isEditMode ? 'PUT' : 'POST';
 

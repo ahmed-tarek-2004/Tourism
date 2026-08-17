@@ -17,7 +17,7 @@ const AdminTrips = () => {
 
   const fetchTrips = async () => {
     try {
-      const response = await fetch('https://localhost:7165/api/Trip/all');
+      const response = await fetch('https://sunsharm.runasp.net/api/Trip/all');
       const result = await response.json();
       if (result.succeeded && result.data) {
         setTrips(result.data);
@@ -46,7 +46,7 @@ const AdminTrips = () => {
     setActionMessage({ text: "", type: "" });
 
     try {
-      const response = await fetch(`https://localhost:7165/api/Trip/${id}`, {
+      const response = await fetch(`https://sunsharm.runasp.net/api/Trip/${id}`, {
         method: 'DELETE',
       });
       

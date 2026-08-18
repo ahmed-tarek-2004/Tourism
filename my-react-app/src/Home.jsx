@@ -245,143 +245,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ========================= ADS & PROMOTIONS (قسم الإعلانات بتصميم الموقع) ========================= */}
-      <section className="promotions section" id="promotions" style={{ padding: '80px 0' }}>
-        <div className="container">
-          <div className="section-heading centered">
-            <span>عروض حصرية</span>
-            <h2>أقوى <strong>عروض الحج السياحي</strong></h2>
-            <p>بادر بالحجز الآن واستفد من الخصم الحصري قبل صدور الضوابط الرسمية.</p>
-          </div>
-          
-          <div style={{
-            background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '45px',
-            color: 'var(--white)',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '40px',
-            alignItems: 'center',
-            boxShadow: 'var(--shadow-lg)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            {/* خلفية زخرفية */}
-            <i className="fa-solid fa-kaaba" style={{
-              position: 'absolute',
-              left: '-20px',
-              bottom: '-30px',
-              fontSize: '280px',
-              opacity: '0.04',
-              transform: 'rotate(-15deg)'
-            }}></i>
-
-            {/* الجزء الأيمن: النص الأساسي والخصم */}
-            <div style={{ zIndex: 1 }}>
-              <span style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center',
-                background: 'rgba(255,255,255,0.1)', 
-                padding: '8px 16px', 
-                borderRadius: '30px', 
-                fontSize: '12px', 
-                fontWeight: 'bold', 
-                color: 'var(--gold-light)', 
-                marginBottom: '15px' 
-              }}>
-                الأكثر راحة وأمان ورفاهية
-                <i className="fa-solid fa-star" style={{ color: 'var(--gold)', marginRight: '8px' }}></i>
-              </span>
-              
-              <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '15px', lineHeight: '1.4' }}>
-                مين ناوي على <span style={{ color: 'var(--gold)' }}>الحج السياحي؟</span>
-              </h3>
-              
-              {/* بطاقة الخصم الجذابة */}
-              <div style={{ 
-                background: 'linear-gradient(90deg, #c62828, #d32f2f)', 
-                padding: '20px 25px', 
-                borderRadius: '16px', 
-                display: 'inline-block',
-                marginBottom: '20px',
-                boxShadow: '0 10px 20px rgba(198, 40, 40, 0.3)',
-                border: '2px dashed rgba(255,255,255,0.3)'
-              }}>
-                <span style={{ display: 'block', fontSize: '14px', marginBottom: '5px', opacity: 0.9 }}>قدم على الحج معنا واحصل على خصم</span>
-                <strong style={{ display: 'block', fontSize: '42px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>
-                  10,000 <small style={{fontSize: '20px', fontWeight: 'bold'}}>جنيه</small>
-                </strong>
-                <small style={{ fontSize: '11px', opacity: 0.8, display: 'block', marginTop: '5px' }}>من سعر البرنامج (بعد صدور الضوابط)</small>
-              </div>
-              
-              <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--gold-light)', marginBottom: '30px' }}>
-                "فقط اهتم بعبادتك.. ونحن بخدمتك"
-              </p>
-
-              <a 
-                href="#contact" 
-                className="btn btn-white" 
-                onClick={() => {
-                  const serviceSelect = document.getElementById('service');
-                  const messageInput = document.getElementById('message');
-                  if(serviceSelect) serviceSelect.value = 'hajj';
-                  if(messageInput) messageInput.value = 'السلام عليكم، أرغب في الاستفسار عن عرض الحج السياحي (خصم 10,000 جنيه).';
-                }}
-                style={{ padding: '16px 35px', fontSize: '16px', fontWeight: 'bold', width: 'fit-content' }}
-              >
-                احجز العرض الآن <i className="fa-solid fa-arrow-left"></i>
-              </a>
-            </div>
-
-            {/* الجزء الأيسر: المميزات بشكل شبكي منظم */}
-            <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
-                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
-                  <i className="fa-solid fa-users"></i>
-                </div>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>نخبة من العلماء</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>بصحبة كبار العلماء ومشايخ الأزهر الشريف للتوجيه والإرشاد</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
-                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
-                  <i className="fa-solid fa-user-tie"></i>
-                </div>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>إشراف إداري</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>إشراف إداري على أعلى مستوى لضمان راحتك طوال الرحلة</span>
-                </div>
-              </div>
-
-              {/* مميزات سريعة (4 مربعات) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '5px' }}>
-                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <i className="fa-solid fa-hotel" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>فنادق فاخرة<br/>قريبة من الحرمين</span>
-                </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <i className="fa-solid fa-bus" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>مواصلات حديثة<br/>ومريحة</span>
-                </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <i className="fa-solid fa-utensils" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>وجبات متنوعة<br/>عالية الجودة</span>
-                </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <i className="fa-solid fa-headset" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>خدمة متكاملة<br/>على مدار الساعة</span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ========================= PACKAGES ========================= */}
       <section className="trips section light-bg" id="packages">
         <div className="container">
@@ -551,6 +414,143 @@ const Home = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ========================= ADS & PROMOTIONS (قسم الإعلانات بتصميم الموقع) ========================= */}
+      <section className="promotions section" id="promotions" style={{ padding: '80px 0' }}>
+        <div className="container">
+          <div className="section-heading centered">
+            <span>عروض حصرية</span>
+            <h2>أقوى <strong>عروض الحج السياحي</strong></h2>
+            <p>بادر بالحجز الآن واستفد من الخصم الحصري قبل صدور الضوابط الرسمية.</p>
+          </div>
+          
+          <div style={{
+            background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '45px',
+            color: 'var(--white)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '40px',
+            alignItems: 'center',
+            boxShadow: 'var(--shadow-lg)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* خلفية زخرفية */}
+            <i className="fa-solid fa-kaaba" style={{
+              position: 'absolute',
+              left: '-20px',
+              bottom: '-30px',
+              fontSize: '280px',
+              opacity: '0.04',
+              transform: 'rotate(-15deg)'
+            }}></i>
+
+            {/* الجزء الأيمن: النص الأساسي والخصم */}
+            <div style={{ zIndex: 1 }}>
+              <span style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center',
+                background: 'rgba(255,255,255,0.1)', 
+                padding: '8px 16px', 
+                borderRadius: '30px', 
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                color: 'var(--gold-light)', 
+                marginBottom: '15px' 
+              }}>
+                الأكثر راحة وأمان ورفاهية
+                <i className="fa-solid fa-star" style={{ color: 'var(--gold)', marginRight: '8px' }}></i>
+              </span>
+              
+              <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '15px', lineHeight: '1.4' }}>
+                مين ناوي على <span style={{ color: 'var(--gold)' }}>الحج السياحي؟</span>
+              </h3>
+              
+              {/* بطاقة الخصم الجذابة */}
+              <div style={{ 
+                background: 'linear-gradient(90deg, #c62828, #d32f2f)', 
+                padding: '20px 25px', 
+                borderRadius: '16px', 
+                display: 'inline-block',
+                marginBottom: '20px',
+                boxShadow: '0 10px 20px rgba(198, 40, 40, 0.3)',
+                border: '2px dashed rgba(255,255,255,0.3)'
+              }}>
+                <span style={{ display: 'block', fontSize: '14px', marginBottom: '5px', opacity: 0.9 }}>قدم على الحج معنا واحصل على خصم</span>
+                <strong style={{ display: 'block', fontSize: '42px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>
+                  10,000 <small style={{fontSize: '20px', fontWeight: 'bold'}}>جنيه</small>
+                </strong>
+                <small style={{ fontSize: '11px', opacity: 0.8, display: 'block', marginTop: '5px' }}>من سعر البرنامج (بعد صدور الضوابط)</small>
+              </div>
+              
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--gold-light)', marginBottom: '30px' }}>
+                "فقط اهتم بعبادتك.. ونحن بخدمتك"
+              </p>
+
+              <a 
+                href="#contact" 
+                className="btn btn-white" 
+                onClick={() => {
+                  const serviceSelect = document.getElementById('service');
+                  const messageInput = document.getElementById('message');
+                  if(serviceSelect) serviceSelect.value = 'hajj';
+                  if(messageInput) messageInput.value = 'السلام عليكم، أرغب في الاستفسار عن عرض الحج السياحي (خصم 10,000 جنيه).';
+                }}
+                style={{ padding: '16px 35px', fontSize: '16px', fontWeight: 'bold', width: 'fit-content' }}
+              >
+                احجز العرض الآن <i className="fa-solid fa-arrow-left"></i>
+              </a>
+            </div>
+
+            {/* الجزء الأيسر: المميزات بشكل شبكي منظم */}
+            <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
+                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
+                  <i className="fa-solid fa-users"></i>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>نخبة من العلماء</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>بصحبة كبار العلماء ومشايخ الأزهر الشريف للتوجيه والإرشاد</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
+                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
+                  <i className="fa-solid fa-user-tie"></i>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>إشراف إداري</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>إشراف إداري على أعلى مستوى لضمان راحتك طوال الرحلة</span>
+                </div>
+              </div>
+
+              {/* مميزات سريعة (4 مربعات) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '5px' }}>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-hotel" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>فنادق فاخرة<br/>قريبة من الحرمين</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-bus" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>مواصلات حديثة<br/>ومريحة</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-utensils" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>وجبات متنوعة<br/>عالية الجودة</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-headset" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>خدمة متكاملة<br/>على مدار الساعة</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
       </section>
 

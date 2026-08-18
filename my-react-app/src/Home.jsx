@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './style.css';
 
-// =========================================
-// 1. DATA (بيانات الحج الثابتة)
-// =========================================
+
 const hajjTripsData = [];
 
 const formatDateArabic = (dateString) => {

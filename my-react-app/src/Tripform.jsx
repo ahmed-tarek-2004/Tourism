@@ -8,7 +8,6 @@ const TripForm = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     
-    // 1. State جديدة للتحكم في حالة الحفظ (لإظهار التحميل)
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const [currentImageUrl, setCurrentImageUrl] = useState(null);
@@ -126,7 +125,6 @@ const TripForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 2. تفعيل حالة التحميل بمجرد بدء الـ Submit
         setIsSubmitting(true);
         setFormMessage({ messages: [], type: "" });
 
@@ -204,7 +202,6 @@ const TripForm = () => {
             console.error("Submit Error:", error);
             setFormMessage({ messages: ["حدث خطأ في الاتصال بالخادم. يرجى التأكد من عمل الـ API."], type: "error" });
         } finally {
-            // 3. إنهاء حالة التحميل سواء نجح الـ Request أو فشل
             setIsSubmitting(false);
         }
     };
@@ -224,7 +221,6 @@ const TripForm = () => {
 
                 <form className="contact-form" onSubmit={handleSubmit}>
 
-                    {/* --- المعلومات الأساسية --- */}
                     <h3 style={{ color: "var(--dark)", fontSize: "18px", marginBottom: "15px" }}>المعلومات الأساسية</h3>
 
                     <div className="form-group">
@@ -328,7 +324,6 @@ const TripForm = () => {
 
                     <hr style={{ borderTop: "1px solid var(--border)", margin: "30px 0" }} />
 
-                    {/* --- الأسعار --- */}
                     <h3 style={{ color: "var(--dark)", fontSize: "18px", marginBottom: "15px" }}>تفاصيل الأسعار</h3>
                     <div className="prices-grid" style={{ gap: "15px" }}>
                         <div className="form-group">
@@ -347,7 +342,6 @@ const TripForm = () => {
 
                     <hr style={{ borderTop: "1px solid var(--border)", margin: "30px 0" }} />
 
-                    {/* --- الخدمات المشمولة --- */}
                     <h3 style={{ color: "var(--dark)", fontSize: "18px", marginBottom: "15px" }}>الخدمات المشمولة</h3>
                     <div className="included-grid" style={{ marginBottom: "20px" }}>
                         <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontSize: "14px", fontWeight: "600" }}>
@@ -370,7 +364,6 @@ const TripForm = () => {
 
                     <hr style={{ borderTop: "1px solid var(--border)", margin: "30px 0" }} />
 
-                    {/* --- صورة الرحلة --- */}
                     <h3 style={{ color: "var(--dark)", fontSize: "18px", marginBottom: "15px" }}>صورة الرحلة (ImageUrl)</h3>
 
                     {isEditMode && currentImageUrl && (
@@ -386,7 +379,6 @@ const TripForm = () => {
                         <input type="file" name="ImageUrl" onChange={handleFileChange} accept="image/*" style={{ background: "transparent", border: "1px dashed var(--primary)", padding: "20px" }} />
                     </div>
 
-                    {/* --- عرض رسائل النجاح والخطأ بشكل منسق ومترجم --- */}
                     {formMessage.messages.length > 0 && (
                         <div style={{
                             padding: "20px",
@@ -411,7 +403,6 @@ const TripForm = () => {
                     )}
 
                     <div style={{ display: "flex", gap: "15px", marginTop: "30px" }}>
-                        {/* 4. تغيير شكل الزر وربطه بحالة isSubmitting */}
                         <button 
                             type="submit" 
                             className="btn btn-primary" 
@@ -437,7 +428,6 @@ const TripForm = () => {
                             )}
                         </button>
                         
-                        {/* تعطيل زر الإلغاء أيضاً أثناء التحميل */}
                         <button 
                             type="button" 
                             onClick={() => navigate('/admin/trips')} 

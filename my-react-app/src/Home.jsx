@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './style.css'; 
+import './style.css';
 
 // =========================================
 // 1. DATA (بيانات الحج الثابتة)
@@ -50,7 +50,7 @@ const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentReview, setCurrentReview] = useState(0);
   const [activeFaq, setActiveFaq] = useState(0);
-  
+
   // States الخاصة بنموذج التواصل
   const [formMessage, setFormMessage] = useState({ text: '', type: '' });
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
@@ -136,7 +136,7 @@ const Home = () => {
   // =========================================
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+
     // تفعيل حالة التحميل وتصفير الرسائل
     setIsSubmittingContact(true);
     setFormMessage({ text: "", type: "" });
@@ -163,7 +163,7 @@ const Home = () => {
       if (response.ok) {
         setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
         e.target.reset(); // تفريغ الحقول بعد النجاح
-        
+
         // إخفاء رسالة النجاح بعد 5 ثواني تلقائياً (اختياري)
         setTimeout(() => setFormMessage({ text: '', type: '' }), 5000);
       } else {
@@ -187,7 +187,7 @@ const Home = () => {
             <span className="logo-icon"><i className="fa-solid fa-kaaba"></i></span>
             <span>
               <strong>صن شرم تورز Sun Sharm Tours</strong>
-              <small> للحج والعمرة</small>
+              <small> حج وعمرة - سياحة داخلية - سياحة خارجية - حجز تذاكر طيران</small>
             </span>
           </a>
 
@@ -213,13 +213,25 @@ const Home = () => {
       <section className="hero" id="home">
         <div className="hero-overlay"></div>
         <div className="container hero-content">
-          <span className="hero-badge"><i className="fa-solid fa-star"></i> رحلتك إلى بيت الله تبدأ من هنا</span>
-          <h1>للحج والعمرة <span>بكل راحة وطمأنينة</span></h1>
-          <p>نقدم لك برامج متكاملة للحج والعمرة، تشمل الإقامة، المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز حتى العودة إلى أرض الوطن.</p>
+          
+          <span className="hero-badge">
+            <i className="fa-solid fa-star"></i> حج وعمرة | سياحة داخلية وخارجية | حجز تذاكر طيران
+          </span>
+          
+          {/* العنوان الرئيسي: قصير، مريح للعين، وجذاب */}
+          <h1>
+            رحلتك إلى بيت الله <br/>
+            <span>بكل راحة وطمأنينة</span>
+          </h1>
+          
+          {/* الوصف: نضع فيه التفاصيل براحتنا */}
+          <p>نقدم لك برامج متكاملة للحج والعمرة، والسياحة الداخلية والخارجية، تشمل الإقامة، المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز حتى العودة.</p>
+          
           <div className="hero-actions">
             <a href="#packages" className="btn btn-primary">اكتشف برامجنا <i className="fa-solid fa-arrow-left"></i></a>
             <a href="#contact" className="btn btn-outline">تواصل معنا <i className="fa-brands fa-whatsapp"></i></a>
           </div>
+          
           <div className="hero-stats">
             <div className="stat"><strong>15+</strong><span>عاماً من الخبرة</span></div>
             <div className="stat"><strong>12K+</strong><span>معتمر وحاج</span></div>
@@ -741,48 +753,48 @@ const Home = () => {
               </div>
 
               {/* زر الإرسال المحدث مع مؤشر التحميل */}
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary form-button"
                 disabled={isSubmittingContact}
-                style={{ 
-                    opacity: isSubmittingContact ? 0.7 : 1,
-                    cursor: isSubmittingContact ? "not-allowed" : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px"
+                style={{
+                  opacity: isSubmittingContact ? 0.7 : 1,
+                  cursor: isSubmittingContact ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
                 }}
               >
                 {isSubmittingContact ? (
-                    <>
-                        جاري الإرسال...
-                        <i className="fa-solid fa-spinner fa-spin"></i>
-                    </>
+                  <>
+                    جاري الإرسال...
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                  </>
                 ) : (
-                    <>
-                        إرسال الطلب <i className="fa-solid fa-paper-plane"></i>
-                    </>
+                  <>
+                    إرسال الطلب <i className="fa-solid fa-paper-plane"></i>
+                  </>
                 )}
               </button>
 
               {/* رسالة الإشعار بتصميم مدمج ومنسق */}
               {formMessage.text && (
                 <div style={{
-                    padding: "15px 20px",
-                    marginTop: "15px",
-                    borderRadius: "10px",
-                    backgroundColor: formMessage.type === "success" ? "var(--primary-light)" : "#ffebee",
-                    color: formMessage.type === "success" ? "var(--primary)" : "#c62828",
-                    border: `1px solid ${formMessage.type === "success" ? "var(--primary)" : "#ef9a9a"}`,
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    fontSize: "13px"
+                  padding: "15px 20px",
+                  marginTop: "15px",
+                  borderRadius: "10px",
+                  backgroundColor: formMessage.type === "success" ? "var(--primary-light)" : "#ffebee",
+                  color: formMessage.type === "success" ? "var(--primary)" : "#c62828",
+                  border: `1px solid ${formMessage.type === "success" ? "var(--primary)" : "#ef9a9a"}`,
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  fontSize: "13px"
                 }}>
-                    <i className={`fa-solid ${formMessage.type === "success" ? "fa-circle-check" : "fa-triangle-exclamation"}`}></i>
-                    {formMessage.text}
+                  <i className={`fa-solid ${formMessage.type === "success" ? "fa-circle-check" : "fa-triangle-exclamation"}`}></i>
+                  {formMessage.text}
                 </div>
               )}
             </form>
@@ -799,7 +811,7 @@ const Home = () => {
                 <span className="logo-icon"><i className="fa-solid fa-kaaba"></i></span>
                 <span>
                   <strong>صن شرم تورز</strong>
-                  <small>للحج والعمرة</small>
+                  <small> حج وعمرة - سياحة داخلية - سياحة خارجية - حجز تذاكر طيران</small>
                 </span>
               </a>
               <p>رحلتك إلى بيت الله تستحق أن تكون أكثر راحة، تنظيماً وطمأنينة.</p>
@@ -833,7 +845,7 @@ const Home = () => {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>© 2026 صن شرم تورز للحج والعمرة. جميع الحقوق محفوظة.</p>
+            <p>© 2026 صن شرم تورز ( حج وعمرة - سياحة داخلية - سياحة خارجية - حجز تذاكر طيران). جميع الحقوق محفوظة.</p>
             <div>
               <a href="#">سياسة الخصوصية</a>
               <a href="#">الشروط والأحكام</a>

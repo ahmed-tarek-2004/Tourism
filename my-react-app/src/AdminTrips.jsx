@@ -5,12 +5,10 @@ const AdminTrips = () => {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // States للتحكم في نافذة الحذف والرسائل
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, tripId: null });
   const [actionMessage, setActionMessage] = useState({ text: "", type: "" });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // جلب الرحلات من الـ API
   useEffect(() => {
     fetchTrips();
   }, []);
@@ -29,17 +27,14 @@ const AdminTrips = () => {
     }
   };
 
-  // دالة فتح نافذة التأكيد
   const triggerDelete = (id) => {
     setDeleteModal({ isOpen: true, tripId: id });
   };
 
-  // دالة إغلاق نافذة التأكيد
   const cancelDelete = () => {
     setDeleteModal({ isOpen: false, tripId: null });
   };
 
-  // الدالة التي تنفذ الحذف الفعلي بعد التأكيد
   const confirmDelete = async () => {
     const id = deleteModal.tripId;
     setIsDeleting(true);
@@ -51,12 +46,10 @@ const AdminTrips = () => {
       });
       
       if (response.ok) {
-        // تحديث القائمة بعد الحذف بنجاح
         setTrips(trips.filter(trip => trip.id !== id));
         setActionMessage({ text: "تم حذف الرحلة بنجاح.", type: "success" });
         setDeleteModal({ isOpen: false, tripId: null }); // إغلاق النافذة
         
-        // إخفاء رسالة النجاح تلقائياً بعد 3 ثوانٍ
         setTimeout(() => setActionMessage({ text: "", type: "" }), 3000);
       } else {
         setDeleteModal({ isOpen: false, tripId: null });
@@ -77,13 +70,11 @@ const AdminTrips = () => {
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h2>إدارة <strong>الرحلات</strong></h2>
-          {/* زر التوجيه لصفحة الإضافة */}
           <Link to="/admin/add-trip" className="btn btn-primary">
             + إضافة رحلة جديدة
           </Link>
         </div>
 
-        {/* --- رسالة الإشعارات (نجاح أو فشل) --- */}
         {actionMessage.text && (
             <div style={{
                 padding: "15px 20px",
@@ -126,11 +117,9 @@ const AdminTrips = () => {
                     <td style={{ padding: '15px', color: 'var(--text)' }}>{new Date(trip.startDate).toLocaleDateString('ar-EG')}</td>
                     <td style={{ padding: '15px', color: 'var(--text)' }}>{trip.durationDays} يوم</td>
                     <td style={{ padding: '15px', textAlign: 'center' }}>
-                      {/* زر التعديل */}
                       <Link to={`/admin/edit-trip/${trip.id}`} className="btn btn-outline" style={{ background: 'var(--gold-light)', color: 'var(--gold)', borderColor: 'var(--gold-light)', minHeight: '40px', padding: '0 15px', marginLeft: '10px' }}>
                         تعديل
                       </Link>
-                      {/* زر الحذف */}
                       <button onClick={() => triggerDelete(trip.id)} className="btn btn-outline" style={{ background: '#ffebee', color: '#c62828', borderColor: '#ffebee', minHeight: '40px', padding: '0 15px' }}>
                         حذف
                       </button>
@@ -226,7 +215,6 @@ const AdminTrips = () => {
         </div>
       )}
 
-      {/* إضافة حركات بسيطة للـ Modal */}
       <style>
         {`
           @keyframes fadeIn {

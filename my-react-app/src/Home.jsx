@@ -4,38 +4,7 @@ import './style.css';
 // =========================================
 // 1. DATA (بيانات الحج الثابتة)
 // =========================================
-const hajjTripsData = [
-  {
-    id: 4,
-    title: "برنامج الحج الاقتصادي",
-    badge: "برنامج حج",
-    days: "20 يوم",
-    date: "15 مايو 2026",
-    image: "https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=1000&q=85",
-    airline: "مصر للطيران",
-    route: ["القاهرة", "جدة", "مكة", "المدينة", "القاهرة"],
-    hotels: [
-      { name: "أبراج مكة", label: "سكن مكة المكرمة", nights: 14 },
-      { name: "فندق الإيمان", label: "سكن المدينة المنورة", nights: 5 }
-    ],
-    prices: { quad: "150,000", triple: "170,000", double: "190,000" }
-  },
-  {
-    id: 5,
-    title: "برنامج الحج المميز (5 نجوم)",
-    badge: "برنامج حج",
-    days: "15 يوم",
-    date: "20 مايو 2026",
-    image: "https://images.unsplash.com/photo-1591604129939-f1efa4d8f56c?auto=format&fit=crop&w=600&q=85",
-    airline: "طيران سعودي",
-    route: ["القاهرة", "جدة", "مكة", "المدينة", "القاهرة"],
-    hotels: [
-      { name: "فيرمونت برج الساعة", label: "سكن مكة المكرمة", nights: 10 },
-      { name: "دار التقوى", label: "سكن المدينة المنورة", nights: 4 }
-    ],
-    prices: { quad: "250,000", triple: "280,000", double: "320,000" }
-  }
-];
+const hajjTripsData = [];
 
 const formatDateArabic = (dateString) => {
   const date = new Date(dateString);
@@ -51,7 +20,6 @@ const Home = () => {
   const [currentReview, setCurrentReview] = useState(0);
   const [activeFaq, setActiveFaq] = useState(0);
 
-  // States الخاصة بنموذج التواصل
   const [formMessage, setFormMessage] = useState({ text: '', type: '' });
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
@@ -131,13 +99,8 @@ const Home = () => {
   const nextReviewSlide = () => setCurrentReview((prev) => (prev >= 3 ? 0 : prev + 1));
   const prevReviewSlide = () => setCurrentReview((prev) => (prev <= 0 ? 3 : prev - 1));
 
-  // =========================================
-  // دالة إرسال نموذج التواصل المعدلة
-  // =========================================
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
-    // تفعيل حالة التحميل وتصفير الرسائل
     setIsSubmittingContact(true);
     setFormMessage({ text: "", type: "" });
 
@@ -151,20 +114,17 @@ const Home = () => {
     }
 
     try {
-      // **تنبيه:** قم بتغيير هذا الرابط إلى الـ Endpoint الخاص بك في الـ Backend
       const response = await fetch('https://sunsharm.runasp.net/api/Trip/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data), // إرسال البيانات كـ JSON
+        body: JSON.stringify(data), 
       });
 
       if (response.ok) {
         setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
-        e.target.reset(); // تفريغ الحقول بعد النجاح
-
-        // إخفاء رسالة النجاح بعد 5 ثواني تلقائياً (اختياري)
+        e.target.reset(); 
         setTimeout(() => setFormMessage({ text: '', type: '' }), 5000);
       } else {
         setFormMessage({ text: "حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.", type: "error" });
@@ -173,7 +133,6 @@ const Home = () => {
       console.error("Contact form error:", error);
       setFormMessage({ text: "حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.", type: "error" });
     } finally {
-      // إيقاف حالة التحميل في جميع الأحوال
       setIsSubmittingContact(false);
     }
   };
@@ -213,25 +172,23 @@ const Home = () => {
       <section className="hero" id="home">
         <div className="hero-overlay"></div>
         <div className="container hero-content">
-          
+
           <span className="hero-badge">
             <i className="fa-solid fa-star"></i> حج وعمرة | سياحة داخلية وخارجية | حجز تذاكر طيران
           </span>
-          
-          {/* العنوان الرئيسي: قصير، مريح للعين، وجذاب */}
+
           <h1>
-            رحلتك إلى بيت الله <br/>
+            رحلتك إلى بيت الله <br />
             <span>بكل راحة وطمأنينة</span>
           </h1>
-          
-          {/* الوصف: نضع فيه التفاصيل براحتنا */}
-          <p>نقدم لك برامج متكاملة للحج والعمرة، والسياحة الداخلية والخارجية، تشمل الإقامة، المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز حتى العودة.</p>
-          
+
+          <p>نقدم لك برامج متكاملة للحج والعمرة، والسياحة الداخلية والخارجية، حجز تذاكر الطيران، تشمل الإقامة، المواصلات والتأشيرات، مع متابعة مستمرة من لحظة الحجز حتى العودة.</p>
+
           <div className="hero-actions">
             <a href="#packages" className="btn btn-primary">اكتشف برامجنا <i className="fa-solid fa-arrow-left"></i></a>
-            <a href="#contact" className="btn btn-outline">تواصل معنا <i className="fa-brands fa-whatsapp"></i></a>
+            <a href="https://wa.me/201001722692?text=السلام%20عليكم،%0Aأرغب%20في%20الاستفسار%20عن%20برامج%20الحج%20والعمرة." target="_blank" rel="noreferrer" className="btn btn-outline">تواصل معنا <i className="fa-brands fa-whatsapp"></i></a>
           </div>
-          
+
           <div className="hero-stats">
             <div className="stat"><strong>15+</strong><span>عاماً من الخبرة</span></div>
             <div className="stat"><strong>12K+</strong><span>معتمر وحاج</span></div>
@@ -288,6 +245,143 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ========================= ADS & PROMOTIONS (قسم الإعلانات بتصميم الموقع) ========================= */}
+      <section className="promotions section" id="promotions" style={{ padding: '80px 0' }}>
+        <div className="container">
+          <div className="section-heading centered">
+            <span>عروض حصرية</span>
+            <h2>أقوى <strong>عروض الحج السياحي</strong></h2>
+            <p>بادر بالحجز الآن واستفد من الخصم الحصري قبل صدور الضوابط الرسمية.</p>
+          </div>
+          
+          <div style={{
+            background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '45px',
+            color: 'var(--white)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '40px',
+            alignItems: 'center',
+            boxShadow: 'var(--shadow-lg)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* خلفية زخرفية */}
+            <i className="fa-solid fa-kaaba" style={{
+              position: 'absolute',
+              left: '-20px',
+              bottom: '-30px',
+              fontSize: '280px',
+              opacity: '0.04',
+              transform: 'rotate(-15deg)'
+            }}></i>
+
+            {/* الجزء الأيمن: النص الأساسي والخصم */}
+            <div style={{ zIndex: 1 }}>
+              <span style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center',
+                background: 'rgba(255,255,255,0.1)', 
+                padding: '8px 16px', 
+                borderRadius: '30px', 
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                color: 'var(--gold-light)', 
+                marginBottom: '15px' 
+              }}>
+                الأكثر راحة وأمان ورفاهية
+                <i className="fa-solid fa-star" style={{ color: 'var(--gold)', marginRight: '8px' }}></i>
+              </span>
+              
+              <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '15px', lineHeight: '1.4' }}>
+                مين ناوي على <span style={{ color: 'var(--gold)' }}>الحج السياحي؟</span>
+              </h3>
+              
+              {/* بطاقة الخصم الجذابة */}
+              <div style={{ 
+                background: 'linear-gradient(90deg, #c62828, #d32f2f)', 
+                padding: '20px 25px', 
+                borderRadius: '16px', 
+                display: 'inline-block',
+                marginBottom: '20px',
+                boxShadow: '0 10px 20px rgba(198, 40, 40, 0.3)',
+                border: '2px dashed rgba(255,255,255,0.3)'
+              }}>
+                <span style={{ display: 'block', fontSize: '14px', marginBottom: '5px', opacity: 0.9 }}>قدم على الحج معنا واحصل على خصم</span>
+                <strong style={{ display: 'block', fontSize: '42px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>
+                  10,000 <small style={{fontSize: '20px', fontWeight: 'bold'}}>جنيه</small>
+                </strong>
+                <small style={{ fontSize: '11px', opacity: 0.8, display: 'block', marginTop: '5px' }}>من سعر البرنامج (بعد صدور الضوابط)</small>
+              </div>
+              
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--gold-light)', marginBottom: '30px' }}>
+                "فقط اهتم بعبادتك.. ونحن بخدمتك"
+              </p>
+
+              <a 
+                href="#contact" 
+                className="btn btn-white" 
+                onClick={() => {
+                  const serviceSelect = document.getElementById('service');
+                  const messageInput = document.getElementById('message');
+                  if(serviceSelect) serviceSelect.value = 'hajj';
+                  if(messageInput) messageInput.value = 'السلام عليكم، أرغب في الاستفسار عن عرض الحج السياحي (خصم 10,000 جنيه).';
+                }}
+                style={{ padding: '16px 35px', fontSize: '16px', fontWeight: 'bold', width: 'fit-content' }}
+              >
+                احجز العرض الآن <i className="fa-solid fa-arrow-left"></i>
+              </a>
+            </div>
+
+            {/* الجزء الأيسر: المميزات بشكل شبكي منظم */}
+            <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
+                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
+                  <i className="fa-solid fa-users"></i>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>نخبة من العلماء</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>بصحبة كبار العلماء ومشايخ الأزهر الشريف للتوجيه والإرشاد</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
+                <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
+                  <i className="fa-solid fa-user-tie"></i>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '16px', color: 'var(--gold-light)', marginBottom: '3px' }}>إشراف إداري</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.6', display: 'block' }}>إشراف إداري على أعلى مستوى لضمان راحتك طوال الرحلة</span>
+                </div>
+              </div>
+
+              {/* مميزات سريعة (4 مربعات) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '5px' }}>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-hotel" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>فنادق فاخرة<br/>قريبة من الحرمين</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-bus" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>مواصلات حديثة<br/>ومريحة</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-utensils" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>وجبات متنوعة<br/>عالية الجودة</span>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <i className="fa-solid fa-headset" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>خدمة متكاملة<br/>على مدار الساعة</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ========================= PACKAGES ========================= */}
       <section className="trips section light-bg" id="packages">
         <div className="container">
@@ -314,12 +408,16 @@ const Home = () => {
           </div>
 
           {packageType === 'umrah' && isLoadingTrips ? (
-            <div style={{ textAlign: 'center', padding: '50px 0', fontSize: '1.2rem', color: '#0d5c4a' }}>
+            <div style={{ textAlign: 'center', padding: '50px 0', fontSize: '1.2rem', color: 'var(--primary)' }}>
               <i className="fa-solid fa-spinner fa-spin"></i> جاري تحميل رحلات العمرة...
             </div>
           ) : activeTrips.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '50px 0', fontSize: '1.2rem' }}>
-              لا توجد رحلات متاحة في الوقت الحالي.
+            <div style={{ textAlign: 'center', padding: '60px 0', background: 'var(--white)', borderRadius: '20px', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '40px', color: 'var(--gold)', marginBottom: '15px' }}>
+                <i className="fa-solid fa-calendar-xmark"></i>
+              </div>
+              <h3 style={{ fontSize: '1.3rem', color: 'var(--dark)', fontWeight: 'bold' }}>لا توجد برامج متاحة الان</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '5px' }}>يرجى معاودة التحقق لاحقاً أو التواصل معنا للاستفسار.</p>
             </div>
           ) : (
             <div className="trips-wrapper">
@@ -550,7 +648,6 @@ const Home = () => {
             </button>
 
             <div className="reviews-slider">
-              {/* Review 1 */}
               <article className={`review-card ${currentReview === 0 ? 'active' : ''}`} style={{ display: currentReview === 0 ? 'block' : 'none' }}>
                 <div className="review-stars">★★★★★</div>
                 <p>"بصراحة كانت تجربة ممتازة جداً. كل شيء كان منظم من أول السفر لحد الرجوع، والفندق كان ممتاز وقريب من الحرم."</p>
@@ -559,7 +656,6 @@ const Home = () => {
                   <div><strong>أحمد محمد</strong><span>رحلة عمرة</span></div>
                 </div>
               </article>
-              {/* Review 2 */}
               <article className={`review-card ${currentReview === 1 ? 'active' : ''}`} style={{ display: currentReview === 1 ? 'block' : 'none' }}>
                 <div className="review-stars">★★★★★</div>
                 <p>"فريق محترم جداً وخدمة ممتازة. أكثر شيء عجبني المتابعة المستمرة أثناء الرحلة والرد السريع على أي استفسار."</p>
@@ -568,7 +664,6 @@ const Home = () => {
                   <div><strong>محمد علي</strong><span>رحلة عمرة</span></div>
                 </div>
               </article>
-              {/* Review 3 */}
               <article className={`review-card ${currentReview === 2 ? 'active' : ''}`} style={{ display: currentReview === 2 ? 'block' : 'none' }}>
                 <div className="review-stars">★★★★</div>
                 <p>"جزاكم الله خيرا "</p>
@@ -577,7 +672,6 @@ const Home = () => {
                   <div><strong>علي رضا</strong><span>رحلة عمرة</span></div>
                 </div>
               </article>
-              {/* Review 4 */}
               <article className={`review-card ${currentReview === 3 ? 'active' : ''}`} style={{ display: currentReview === 3 ? 'block' : 'none' }}>
                 <div className="review-stars">★★★★★</div>
                 <p>"الحمد لله كانت رحلة جميلة جداً. التنظيم ممتاز والفندق والمواصلات كانوا على مستوى عالي. ربنا يبارك لكم."</p>
@@ -609,7 +703,6 @@ const Home = () => {
             <h2>هل لديك <strong>استفسار؟</strong></h2>
           </div>
           <div className="faq-container">
-            {/* السؤال 1 */}
             <div className={`faq-item ${activeFaq === 0 ? 'active' : ''}`}>
               <button className="faq-question" onClick={() => setActiveFaq(activeFaq === 0 ? null : 0)}>
                 <span>ما الأوراق المطلوبة للحجز؟</span>
@@ -619,7 +712,6 @@ const Home = () => {
                 <p>تختلف المستندات المطلوبة حسب نوع الرحلة والجنسية والأنظمة المعمول بها وقت السفر، وسيساعدك فريقنا في معرفة كل المستندات المطلوبة.</p>
               </div>
             </div>
-            {/* السؤال 2 */}
             <div className={`faq-item ${activeFaq === 1 ? 'active' : ''}`}>
               <button className="faq-question" onClick={() => setActiveFaq(activeFaq === 1 ? null : 1)}>
                 <span>هل الأسعار تشمل تذاكر الطيران؟</span>
@@ -629,7 +721,6 @@ const Home = () => {
                 <p>تختلف حسب البرنامج والباقات المتاحة. يمكنك التواصل معنا لمعرفة ما يشمله كل برنامج بالتحديد.</p>
               </div>
             </div>
-            {/* السؤال 3 */}
             <div className={`faq-item ${activeFaq === 2 ? 'active' : ''}`}>
               <button className="faq-question" onClick={() => setActiveFaq(activeFaq === 2 ? null : 2)}>
                 <span>هل يوجد مواصلات من وإلى المطار؟</span>
@@ -639,7 +730,6 @@ const Home = () => {
                 <p>نعم، تتوفر خدمات النقل حسب البرنامج الذي تختاره.</p>
               </div>
             </div>
-            {/* السؤال 4 */}
             <div className={`faq-item ${activeFaq === 3 ? 'active' : ''}`}>
               <button className="faq-question" onClick={() => setActiveFaq(activeFaq === 3 ? null : 3)}>
                 <span>هل يمكن عمل برنامج خاص؟</span>
@@ -649,7 +739,6 @@ const Home = () => {
                 <p>نعم، يمكننا تجهيز برامج مخصصة للأفراد والعائلات والمجموعات حسب احتياجاتكم.</p>
               </div>
             </div>
-            {/* السؤال 5 */}
             <div className={`faq-item ${activeFaq === 4 ? 'active' : ''}`}>
               <button className="faq-question" onClick={() => setActiveFaq(activeFaq === 4 ? null : 4)}>
                 <span>كيف يتم الحجز؟</span>
@@ -696,7 +785,8 @@ const Home = () => {
                 <div className="contact-icon"><i className="fa-brands fa-whatsapp"></i></div>
                 <div>
                   <span>WhatsApp</span>
-                  <a href="https://wa.me/201001722692" target="_blank" rel="noreferrer">تواصل معنا على واتساب</a>
+                  <a href="https://wa.me/201001722692?text=السلام%20عليكم،%0Aأرغب%20في%20الاستفسار%20عن%20برامج%20الحج%20والعمرة." target="_blank" rel="noreferrer">
+                    تواصل معنا على واتساب</a>
                 </div>
               </div>
               <div className="contact-card">
@@ -752,7 +842,6 @@ const Home = () => {
                 <textarea name="message" id="message" rows="5" placeholder="اكتب رسالتك..." required></textarea>
               </div>
 
-              {/* زر الإرسال المحدث مع مؤشر التحميل */}
               <button
                 type="submit"
                 className="btn btn-primary form-button"
@@ -778,7 +867,6 @@ const Home = () => {
                 )}
               </button>
 
-              {/* رسالة الإشعار بتصميم مدمج ومنسق */}
               {formMessage.text && (
                 <div style={{
                   padding: "15px 20px",

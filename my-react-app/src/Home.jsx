@@ -42,9 +42,14 @@ const Home = () => {
             date: formatDateArabic(trip.startDate),
             image: trip.imageUrl,
             airline: trip.airline,
-            route: trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
-              ? trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
-              : ["بري"],
+            transportationType: trip.transportationType, // تم إضافتها لتستخدم في الأيقونات لاحقاً
+            route: trip.transportationType === "Land"? ["برّي"]:
+             trip.transportationType === "Ship"? ["بحري"]:
+            // trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
+            //   ?
+               trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
+              // : ["بري"],
+            ,
             hotels: [
               { name: trip.makkahHotel || "غير محدد", label: "سكن مكة المكرمة", nights: trip.makkahNights || 0 },
               { name: trip.madinahHotel || "غير محدد", label: "سكن المدينة المنورة", nights: trip.madinahNights || 0 }
@@ -316,7 +321,11 @@ const Home = () => {
                           <h3>{trip.title}</h3>
                         </div>
                         <div className="airline">
-                          <i className="fa-solid fa-plane"></i>
+                          <i className={`fa-solid ${
+                              trip.transportationType === 'Land' ? 'fa-bus' : 
+                              trip.transportationType === 'Ship' ? 'fa-ship' : 
+                              'fa-plane'
+                          }`}></i>
                           <span>{trip.airline}</span>
                         </div>
                       </div>
@@ -415,7 +424,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ========================= ADS & PROMOTIONS (قسم الإعلانات بتصميم الموقع) ========================= */}
+      {/* ========================= ADS & PROMOTIONS ========================= */}
       <section className="promotions section" id="promotions" style={{ padding: '80px 0' }}>
         <div className="container">
           <div className="section-heading centered">

@@ -213,7 +213,7 @@ const Home = () => {
             <div className="about-images">
               <div className="image-main"><img src="https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=1000&q=85" alt="مكة المكرمة" /></div>
               <div className="experience-card"><strong>15+</strong><span>سنة من الخبرة</span></div>
-              <div className="image-small"><img src="https://images.unsplash.com/photo-1591604129939-f1efa4d8f56c?auto=format&fit=crop&w=600&q=85" alt="المسجد النبوي" /></div>
+              <div className="image-small"><img src="https://images.openai.com/static-rsc-4/qtRrBNCHAla5n7sD33TN7KrpdDV3-1JQv35oqbhVLYCrnCg_22BU-eDyiT7woMTVNsCp0xAFqmPwNX3qHo9cGfs-yCbiCpiW6SxPnB5zhDYGZy99yWq1onnokzRJghMNZMeZoJILSuK_n5bZzsRw8zXZOlJY5iyKNhaae80vjXOFeUrLDKE8QM5288aQBrss?purpose=fullsize" alt="المسجد النبوي" /></div>
             </div>
             <div className="about-content">
               <span className="small-title">لماذا صن شرم تورز؟</span>

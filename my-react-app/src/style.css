@@ -1,6 +1,7 @@
 html {
-  scroll-behavior: smooth;
+    scroll-behavior: smooth;
 }
+
 :root {
     --primary: #0d5c4a;
     --primary-dark: #084438;
@@ -47,6 +48,7 @@ body {
     color: var(--text);
     background: var(--white);
     line-height: 1.8;
+    overflow-x: clip;
 }
 
 body,
@@ -91,11 +93,16 @@ ul {
 ========================================= */
 
 .header {
-    position: sticky; 
+    position: fixed;
     top: 0;
+    /* right: 0;
+    left: 0; */
+    width: 100%;
     z-index: 1000;
+
     transition: var(--transition);
 }
+
 .header.scrolled {
     background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(15px);

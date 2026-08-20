@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Dive 2026 — Session 1 · Architecture, CQRS, DI &amp; Logging</title>
+<style>
+/* ============================================================
+   DEEP DIVE 2026 — deck design system
+   Dark engineering-review theme · single accent · offline
+   ============================================================ */
+:root{
+  --bg:#0b0d12;
+  --bg-raise:#11141c;
+  --bg-panel:#141824;
+  --line:#232936;
+  --line-soft:#1a1f2b;
+  --text:#e8eaf0;
+  --text-dim:#9aa3b5;
+  --text-faint:#5c6577;
+  --accent:#8b7ff5;
+  --accent-soft:rgba(139,127,245,.14);
+  --accent-line:rgba(139,127,245,.38);
+  --good:#4ade80;
+  --good-soft:rgba(74,222,128,.12);
+  --bad:#f87171;
+  --bad-soft:rgba(248,113,113,.10);
+  --warn:#fbbf24;
+  --warn-soft:rgba(251,191,36,.10);
+  /* code token colors */
+  --c-kw:#82aaff;
+  --c-ty:#4ec9b0;
+  --c-str:#ce9178;
+  --c-com:#5f6b7d;
+  --c-num:#b5cea8;
+  --c-cmd:#e8eaf0;
+  --c-prompt:#5c6577;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased}
+
+/* ---------- deck & slides ---------- */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s;
+  pointer-events:none}
+.slide.active{opacity:1;visibility:visible;pointer-events:auto}
+.wrap{width:min(92vw,1660px);max-height:88vh;padding:0 1vw}
+
+/* staggered reveal */
+.st{opacity:0}
+.slide.active .st{animation:fadeUp .55s cubic-bezier(.16,1,.3,1) both;
+  animation-delay:calc(var(--i,0)*90ms)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .slide{transition:none}
+  .slide.active .st{animation:none;opacity:1}
+}
+
+/* ---------- typography ---------- */
+.kicker{font-family:var(--mono);font-size:.85vw;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:1.4vw}
+h1{font-size:4.6vw;line-height:1.04;letter-spacing:-.025em;font-weight:700}
+h2{font-size:3vw;line-height:1.08;letter-spacing:-.02em;font-weight:700;margin-bottom:1.1vw}
+.sub{font-size:1.25vw;line-height:1.55;color:var(--text-dim);max-width:62ch}
+.lead{font-size:1.5vw;line-height:1.5;color:var(--text-dim);max-width:56ch}
+.small{font-size:.95vw;color:var(--text-faint)}
+strong{color:var(--text);font-weight:600}
+em{font-style:italic}
+.acc{color:var(--accent)}
+.dim{color:var(--text-dim)}
+
+/* ---------- chrome ---------- */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);
+  width:0;z-index:50;transition:width .35s ease}
+.hud{position:fixed;bottom:2vh;left:0;right:0;display:flex;align-items:center;
+  justify-content:space-between;padding:0 2.4vw;z-index:40;
+  font-family:var(--mono);font-size:.8vw;color:var(--text-faint)}
+.hud .brand{letter-spacing:.18em;text-transform:uppercase}
+.hud .navbtns{display:flex;gap:.6vw;align-items:center}
+.hud button{background:none;border:1px solid var(--line);color:var(--text-dim);
+  font-family:var(--mono);font-size:.85vw;width:2.4vw;height:2.4vw;border-radius:8px;
+  cursor:pointer;transition:border-color .2s,color .2s}
+.hud button:hover{border-color:var(--accent-line);color:var(--text)}
+.hud button:active{transform:scale(.96)}
+.counter{min-width:5.5vw;text-align:center}
+
+/* ---------- layout helpers ---------- */
+.cols{display:grid;gap:2vw;align-items:start}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-32{grid-template-columns:1.4fr 1fr}
+.cols-23{grid-template-columns:1fr 1.4fr}
+.center{text-align:center}
+.vcenter{display:flex;flex-direction:column;justify-content:center}
+
+/* ---------- panels & cards ---------- */
+.panel{background:var(--bg-raise);border:1px solid var(--line);border-radius:14px;
+  padding:1.5vw 1.7vw}
+.panel h3{font-size:1.2vw;font-weight:600;margin-bottom:.6vw}
+.panel p{font-size:1.02vw;line-height:1.55;color:var(--text-dim)}
+.panel.good{border-color:rgba(74,222,128,.35);background:linear-gradient(var(--good-soft),transparent 60%),var(--bg-raise)}
+.panel.bad{border-color:rgba(248,113,113,.32);background:linear-gradient(var(--bad-soft),transparent 60%),var(--bg-raise)}
+.panel.accented{border-color:var(--accent-line);background:linear-gradient(var(--accent-soft),transparent 65%),var(--bg-raise)}
+.label-good{font-family:var(--mono);font-size:.8vw;letter-spacing:.16em;text-transform:uppercase;color:var(--good);margin-bottom:.7vw}
+.label-bad{font-family:var(--mono);font-size:.8vw;letter-spacing:.16em;text-transform:uppercase;color:var(--bad);margin-bottom:.7vw}
+.label-acc{font-family:var(--mono);font-size:.8vw;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:.7vw}
+
+/* ---------- code ---------- */
+pre.code{background:#0d1017;border:1px solid var(--line);border-radius:12px;
+  padding:1.3vw 1.5vw;font-family:var(--mono);font-size:1.02vw;line-height:1.62;
+  overflow:hidden;white-space:pre;tab-size:4}
+pre.code.big{font-size:1.12vw}
+pre.code.small-code{font-size:.88vw;line-height:1.55}
+.code-title{font-family:var(--mono);font-size:.8vw;letter-spacing:.14em;color:var(--text-faint);
+  text-transform:uppercase;margin-bottom:.6vw}
+.tok-kw{color:var(--c-kw)}
+.tok-ty{color:var(--c-ty)}
+.tok-str{color:var(--c-str)}
+.tok-com{color:var(--c-com);font-style:italic}
+.tok-num{color:var(--c-num)}
+.tok-prompt{color:var(--c-prompt)}
+.tok-flag{color:var(--c-str)}
+.hl-line{display:inline-block;width:100%;background:var(--accent-soft);
+  border-left:3px solid var(--accent);margin-left:-1.5vw;padding-left:calc(1.5vw - 3px)}
+
+/* ---------- flow diagrams (pill chains) ---------- */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:.7vw}
+.flow .node{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;
+  padding:.75vw 1.15vw;font-size:1.02vw;font-weight:500;white-space:nowrap}
+.flow .node.hot{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text)}
+.flow .node.ok{border-color:rgba(74,222,128,.4);background:var(--good-soft)}
+.flow .node.err{border-color:rgba(248,113,113,.4);background:var(--bad-soft)}
+.flow .arr{color:var(--text-faint);font-size:1.2vw;font-family:var(--mono)}
+.flow-v{display:flex;flex-direction:column;align-items:center;gap:.45vw}
+.flow-v .node{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;
+  padding:.7vw 1.4vw;font-size:1.05vw;font-weight:500;text-align:center}
+.flow-v .node.hot{border-color:var(--accent-line);background:var(--accent-soft)}
+.flow-v .arr{color:var(--text-faint);font-size:1.15vw;line-height:1;font-family:var(--mono)}
+.node .note{display:block;font-size:.82vw;font-weight:400;color:var(--text-dim);margin-top:.25vw;white-space:normal}
+
+/* ---------- evolution strip (V0 → V6) ---------- */
+.evo{display:flex;align-items:flex-start;gap:0;margin-top:1vw}
+.evo .step{flex:1;position:relative;text-align:center;padding-top:1.6vw}
+.evo .step::before{content:"";position:absolute;top:.55vw;left:50%;right:-50%;height:2px;background:var(--line)}
+.evo .step:last-child::before{display:none}
+.evo .dot{position:absolute;top:0;left:50%;transform:translateX(-50%);width:1.15vw;height:1.15vw;
+  border-radius:50%;background:var(--bg);border:2px solid var(--line);z-index:1}
+.evo .step.done .dot{border-color:var(--accent);background:var(--accent)}
+.evo .step.here .dot{border-color:var(--accent);background:var(--bg);box-shadow:0 0 0 .35vw var(--accent-soft)}
+.evo .step.here::after{content:"YOU ARE HERE";position:absolute;top:-1.9vw;left:50%;transform:translateX(-50%);
+  font-family:var(--mono);font-size:.62vw;letter-spacing:.18em;color:var(--accent);white-space:nowrap}
+.evo .v{font-family:var(--mono);font-size:.85vw;color:var(--text-dim);display:block}
+.evo .step.here .v,.evo .step.done .v{color:var(--text)}
+.evo .t{font-size:.85vw;color:var(--text-faint);display:block;margin-top:.2vw;line-height:1.3}
+.evo .step.here .t{color:var(--accent)}
+
+/* ---------- comparison / tables ---------- */
+table.cmp{width:100%;border-collapse:collapse;font-size:1vw}
+table.cmp th{font-family:var(--mono);font-size:.8vw;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-faint);text-align:left;padding:.6vw .9vw;border-bottom:1px solid var(--line)}
+table.cmp td{padding:.72vw .9vw;border-bottom:1px solid var(--line-soft);color:var(--text-dim);line-height:1.45}
+table.cmp td:first-child{color:var(--text);font-weight:500;white-space:nowrap}
+table.cmp tr:last-child td{border-bottom:none}
+
+/* ---------- misc ---------- */
+.tag{display:inline-block;font-family:var(--mono);font-size:.78vw;letter-spacing:.14em;
+  text-transform:uppercase;padding:.32vw .8vw;border-radius:999px;border:1px solid var(--line);
+  color:var(--text-dim)}
+.tag.acc{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+.rule{height:1px;background:var(--line);margin:1.6vw 0}
+.big-arrow{font-size:2.2vw;color:var(--accent);font-family:var(--mono);text-align:center}
+.checklist{list-style:none;font-size:1.12vw;line-height:1.6}
+.checklist li{padding:.42vw 0 .42vw 2vw;position:relative;color:var(--text-dim)}
+.checklist li::before{content:"—";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
+.checklist.xmarks li::before{content:"✕";color:var(--bad);font-size:.9em}
+.checklist.checks li::before{content:"✓";color:var(--good)}
+.footnote{position:absolute;bottom:6.5vh;left:0;right:0;text-align:center;
+  font-size:.85vw;color:var(--text-faint)}
+svg text{font-family:var(--sans)}
+svg .mono{font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+<!-- ============ 1 · TITLE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Deep Dive 2026 · Backend Engineering using .NET</div>
+    <h1 class="st" style="--i:1">Session 1<br><span class="acc">Architecture, CQRS,<br>Dependency Injection &amp; Logging</span></h1>
+    <p class="lead st" style="--i:2;margin-top:1.6vw">One evolving backend. Real engineering problems.<br>Concepts first — tools second.</p>
+    <div class="st" style="--i:3;margin-top:2.6vw">
+      <span class="tag">6 sessions</span>&nbsp;
+      <span class="tag">1 project</span>&nbsp;
+      <span class="tag acc">Session 1 of 6</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 · WHAT PROBLEM IS THIS TRACK SOLVING ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">This track is <span class="acc">not</span> a list of technologies</h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="panel bad st" style="--i:1">
+        <div class="label-bad">✕ &nbsp;The usual way</div>
+        <div class="flow-v" style="align-items:flex-start">
+          <div style="font-family:var(--mono);font-size:1.05vw;line-height:2.1;color:var(--text-dim)">
+            Clean Architecture<br>→ CQRS<br>→ Redis<br>→ Hangfire<br>→ SignalR<br>→ Docker
+          </div>
+        </div>
+        <p style="margin-top:1vw">Isolated tutorials. Tools memorized, problems never understood.</p>
+      </div>
+      <div class="panel good st" style="--i:2">
+        <div class="label-good">✓ &nbsp;This track</div>
+        <div style="font-size:1.15vw;line-height:2;color:var(--text)">
+          We hit a <strong class="acc">real problem</strong><br>
+          → understand the <strong>concept</strong> behind it<br>
+          → weigh the <strong>trade-offs</strong><br>
+          → implement a solution <strong>in .NET</strong><br>
+          → run it, observe it<br>
+          → improve the <strong>same project</strong>
+        </div>
+      </div>
+    </div>
+    <p class="sub st" style="--i:3;margin-top:1.8vw">Frameworks and libraries are <strong>implementation vehicles</strong> — not the learning objectives.</p>
+  </div>
+</section>
+
+<!-- ============ 3 · THE LEARNING LOOP ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The learning loop <span class="dim">— every topic, every session</span></h2>
+    <div style="margin-top:2.4vw">
+      <div class="flow st" style="--i:1;justify-content:center">
+        <div class="node err">Problem</div><div class="arr">→</div>
+        <div class="node">Understand the concept</div><div class="arr">→</div>
+        <div class="node">Why does it exist?</div><div class="arr">→</div>
+        <div class="node">Explore trade-offs</div><div class="arr">→</div>
+        <div class="node">Choose a solution</div>
+      </div>
+      <div class="big-arrow st" style="--i:2;margin:1.2vw 0">↓</div>
+      <div class="flow st" style="--i:3;justify-content:center">
+        <div class="node hot">Implement it in .NET</div><div class="arr">→</div>
+        <div class="node">Run &amp; observe</div><div class="arr">→</div>
+        <div class="node">Apply to the real project</div><div class="arr">→</div>
+        <div class="node ok">Improve incrementally</div>
+      </div>
+      <div class="big-arrow st" style="--i:4;margin:1.2vw 0">↺</div>
+      <p class="center sub st" style="--i:5;margin:0 auto">…which surfaces the <strong>next problem</strong>. The loop repeats — that <em>is</em> the curriculum.</p>
+    </div>
+    <div class="cols cols-2 st" style="--i:6;margin-top:2.2vw;gap:1.2vw">
+      <div class="panel"><h3>Concept</h3><p>Reproducible environments · repeated expensive work · work leaving the request path</p></div>
+      <div class="panel"><h3>Tool that implements it</h3><p>Docker · Redis / IMemoryCache · BackgroundService / Hangfire</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · ONE EVOLVING PROJECT ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">One codebase · six sessions</div>
+    <h2 class="st" style="--i:1">Library Management System</h2>
+    <p class="sub st" style="--i:2">Starts as a simple CRUD backend. Every session upgrades the <strong>same system</strong> — never a fresh tutorial project.</p>
+    <div class="st" style="--i:3;margin-top:3.4vw">
+      <div class="evo">
+        <div class="step here"><span class="dot"></span><span class="v">V0</span><span class="t">Basic CRUD</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V1</span><span class="t">Maintainable &amp; structured</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V2</span><span class="t">DB-performance optimized</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V3</span><span class="t">Cached</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V4</span><span class="t">Async / background</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V5</span><span class="t">Real-time</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V6</span><span class="t">Deployable &amp; observable</span></div>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:4;margin:3.4vw auto 0">“This is the <strong>same system</strong> — but it keeps getting <span class="acc">better</span>.”</p>
+  </div>
+</section>
+
+<!-- ============ 5 · PROGRAM STRUCTURE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">6 sessions <span class="dim">— one continuous journey</span></h2>
+    <p class="sub st" style="--i:1">Each session ≈ 2–3 hours and ships a meaningful project increment. <span class="small">(proposed structure)</span></p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vw;margin-top:2vw">
+      <div class="panel accented st" style="--i:2">
+        <div class="label-acc">Session 1 · today</div>
+        <h3>Architecture &amp; Maintainability</h3>
+        <p>Clean / Onion · CQRS · DI · best practices · logging with Serilog</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <div class="label-acc" style="color:var(--text-faint)">Session 2</div>
+        <h3>EF Core Optimizations</h3>
+        <p>N+1 · AsNoTracking · AsSplitQuery · pagination · projection</p>
+      </div>
+      <div class="panel st" style="--i:4">
+        <div class="label-acc" style="color:var(--text-faint)">Session 3</div>
+        <h3>Caching</h3>
+        <p>IMemoryCache · distributed cache (Redis) · output / response caching · cache strategies</p>
+      </div>
+      <div class="panel st" style="--i:5">
+        <div class="label-acc" style="color:var(--text-faint)">Session 4</div>
+        <h3>Async &amp; Background Jobs</h3>
+        <p>Work leaving the request path · BackgroundService · Hangfire</p>
+      </div>
+      <div class="panel st" style="--i:6">
+        <div class="label-acc" style="color:var(--text-faint)">Session 5</div>
+        <h3>Real-time</h3>
+        <p>Polling · long polling · SSE · WebSockets · SignalR</p>
+      </div>
+      <div class="panel st" style="--i:7">
+        <div class="label-acc" style="color:var(--text-faint)">Session 6</div>
+        <h3>Deployment</h3>
+        <p>Docker · tiny CI/CD · final integration</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 · SESSION 1 MAP ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Session 1 · roadmap</div>
+    <h2 class="st" style="--i:1">Today: from <span style="color:var(--bad)">V0</span> to <span class="acc">V1</span></h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="panel bad st" style="--i:2">
+        <div class="label-bad">V0 — where we start</div>
+        <ul class="checklist xmarks">
+          <li>Everything in one place</li>
+          <li>Classes create their own dependencies</li>
+          <li>Reads and writes tangled together</li>
+          <li>No structured logging</li>
+        </ul>
+      </div>
+      <div class="panel good st" style="--i:3">
+        <div class="label-good">V1 — where we end today</div>
+        <ul class="checklist checks">
+          <li>Clean / Onion layering — dependencies point inward</li>
+          <li>DIP → DI → .NET DI container</li>
+          <li>CQRS: commands &amp; queries separated (via MediatR)</li>
+          <li>Structured logging (via Serilog)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="st" style="--i:4;margin-top:2.4vw">
+      <div class="flow" style="justify-content:center">
+        <div class="node err">Problem: change is painful</div><div class="arr">→</div>
+        <div class="node">Concept: dependency direction</div><div class="arr">→</div>
+        <div class="node hot">.NET implementation</div><div class="arr">→</div>
+        <div class="node ok">Library System V1</div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============ 7 · V0: THE NAIVE BACKEND ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">V0 — the naive backend</h2>
+    <p class="sub st" style="--i:1">It works. It returns JSON. So… what’s the problem?</p>
+    <div class="cols cols-32" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">BooksController.cs — everything, everywhere, all at once</div>
+        <pre class="code" data-lang="csharp">public class BooksController : ControllerBase
+{
+    private readonly SqlBookRepository _repository;
+
+    public BooksController()
+    {
+        // the controller creates its own dependency
+        _repository = new SqlBookRepository();
+    }
+
+    [HttpPost]
+    public IActionResult CreateBook(BookInput input)
+    {
+        // validation ... business rules ...
+        // data access ... formatting ...
+        // all mixed in one method
+        _repository.Insert(input);
+        return Ok();
+    }
+}</pre>
+      </div>
+      <div class="vcenter st" style="--i:3;gap:1vw;display:flex">
+        <div class="panel"><h3>It runs</h3><p>V0 is a <strong>working</strong> system. That matters — we always start from working software.</p></div>
+        <div class="panel bad"><h3>But change is expensive</h3><p>Swap SQL for anything else? Test the business rule alone? Every change touches this one class.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · WHAT'S ACTUALLY WRONG ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The real problem: <span class="acc">dependency direction</span></h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="st" style="--i:1">
+        <div class="flow-v">
+          <div class="node">Business logic</div>
+          <div class="arr">↓ depends on</div>
+          <div class="node err">SqlBookRepository <span class="note">a concrete infrastructure detail</span></div>
+        </div>
+        <p class="center sub st" style="--i:2;margin:1.4vw auto 0;font-size:1.05vw">The most important code in the system<br>is chained to the most replaceable code.</p>
+      </div>
+      <div class="st" style="--i:3">
+        <table class="cmp">
+          <tr><th>Symptom</th><th>Cause</th></tr>
+          <tr><td>Can’t unit test</td><td>Dependency is hard-wired with <code style="font-family:var(--mono);color:var(--c-str)">new</code></td></tr>
+          <tr><td>Can’t swap the database</td><td>Business code names a concrete class</td></tr>
+          <tr><td>Every change ripples</td><td>No boundaries — one class, many reasons to change</td></tr>
+          <tr><td>Fear of refactoring</td><td>No seams to isolate behavior</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:4;margin:2vw auto 0">The fix is a <strong>concept</strong>, not a framework: <span class="acc">control which way dependencies point.</span></p>
+  </div>
+</section>
+
+<!-- ============ 9 · CLEAN vs ONION ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="cols cols-23">
+      <div class="vcenter" style="display:flex">
+        <h2 class="st" style="--i:0">Clean &amp; Onion Architecture</h2>
+        <p class="sub st" style="--i:1">Two closely related architectural styles.<br>Both share one core rule:</p>
+        <div class="panel accented st" style="--i:2;margin-top:1.2vw">
+          <p style="font-size:1.3vw;color:var(--text)">Dependencies point <strong class="acc">inward</strong>.<br>
+          <span class="sub" style="font-size:1.02vw">The core (business logic) knows nothing about the outside (infrastructure, web, database).</span></p>
+        </div>
+        <ul class="checklist st" style="--i:3;margin-top:1.2vw">
+          <li>Domain sits at the center — pure business model</li>
+          <li>Application orchestrates use cases around it</li>
+          <li>Infrastructure &amp; API live at the edge — replaceable details</li>
+        </ul>
+      </div>
+      <div class="st center" style="--i:2">
+        <svg viewBox="0 0 560 560" style="width:30vw;max-width:100%">
+          <circle cx="280" cy="280" r="258" fill="none" stroke="#232936" stroke-width="2"/>
+          <circle cx="280" cy="280" r="196" fill="#11141c" stroke="#232936" stroke-width="2"/>
+          <circle cx="280" cy="280" r="132" fill="#141824" stroke="#3a3560" stroke-width="2"/>
+          <circle cx="280" cy="280" r="70" fill="rgba(139,127,245,.14)" stroke="#8b7ff5" stroke-width="2.5"/>
+          <text x="280" y="273" text-anchor="middle" fill="#e8eaf0" font-size="24" font-weight="700">Domain</text>
+          <text x="280" y="298" text-anchor="middle" fill="#9aa3b5" font-size="14">entities · rules</text>
+          <text x="280" y="128" text-anchor="middle" fill="#c9c3f7" font-size="20" font-weight="600">Application</text>
+          <text x="280" y="66" text-anchor="middle" fill="#9aa3b5" font-size="20" font-weight="600">Infrastructure</text>
+          <text x="280" y="9" text-anchor="middle" dominant-baseline="hanging" fill="#5c6577" font-size="20" font-weight="600">API / Presentation</text>
+          <g stroke="#8b7ff5" stroke-width="2.5" fill="none" marker-end="url(#arrIn)">
+            <line x1="88" y1="472" x2="196" y2="364"/>
+            <line x1="472" y1="472" x2="364" y2="364"/>
+          </g>
+          <defs>
+            <marker id="arrIn" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#8b7ff5"/>
+            </marker>
+          </defs>
+          <text x="118" y="512" fill="#8b7ff5" font-size="15" class="mono">dependencies</text>
+          <text x="118" y="532" fill="#8b7ff5" font-size="15" class="mono">point inward</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 · GUARDRAIL: CLEAN ≠ ONION ≠ CQRS ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Common misconceptions — let’s kill them early</div>
+    <h2 class="st" style="--i:1">Related <span class="dim">is not</span> equal</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.4vw;margin-top:2vw">
+      <div class="panel st" style="--i:2">
+        <div class="label-bad">✕ “Clean = Onion”</div>
+        <p style="font-size:1.05vw">They are <strong>closely related styles</strong> with different histories and vocabulary. Both protect the core via inward dependencies — but they are not the same thing.</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <div class="label-bad">✕ “Clean Architecture requires CQRS”</div>
+        <p style="font-size:1.05vw">It doesn’t. Neither does Onion. You can build a fully clean/onion system with plain services and no CQRS at all.</p>
+      </div>
+      <div class="panel st" style="--i:4">
+        <div class="label-bad">✕ “CQRS is part of the architecture”</div>
+        <p style="font-size:1.05vw">CQRS is a <strong>separate design pattern</strong>. It can be applied inside Clean, inside Onion — or inside neither.</p>
+      </div>
+    </div>
+    <div class="panel accented st" style="--i:5;margin-top:1.8vw">
+      <p style="font-size:1.15vw;color:var(--text)">Architecture styles answer <strong>“which way do dependencies point?”</strong> — CQRS answers <strong>“should reads and writes share one model?”</strong> Different questions. Composable answers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11 · CLI SETUP 1: SOLUTION & PROJECTS ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Live build · step 1</div>
+    <h2 class="st" style="--i:1">Create the solution with the .NET CLI</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">solution + 4 projects</div>
+        <pre class="code big" data-lang="bash">$ mkdir LibrarySystem && cd LibrarySystem
+$ dotnet new sln -n LibrarySystem
+
+$ dotnet new classlib -n LibrarySystem.Domain
+$ dotnet new classlib -n LibrarySystem.Application
+$ dotnet new classlib -n LibrarySystem.Infrastructure
+$ dotnet new webapi   -n LibrarySystem.API</pre>
+      </div>
+      <div class="st" style="--i:3">
+        <div class="code-title">register them in the solution</div>
+        <pre class="code big" data-lang="bash">$ dotnet sln add LibrarySystem.Domain
+$ dotnet sln add LibrarySystem.Application
+$ dotnet sln add LibrarySystem.Infrastructure
+$ dotnet sln add LibrarySystem.API</pre>
+        <div class="panel" style="margin-top:1.2vw">
+          <p style="font-size:1.02vw"><strong>3 class libraries + 1 web API.</strong> Four projects — because we want the <em>compiler</em> to enforce our architecture boundaries, not a wiki page.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 · CLI SETUP 2: REFERENCES = ARCHITECTURE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Live build · step 2</div>
+    <h2 class="st" style="--i:1">Every <span class="acc">reference</span> is an architecture decision</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <pre class="code" data-lang="bash"># Application → Domain
+$ dotnet add LibrarySystem.Application \
+    reference LibrarySystem.Domain
+
+# Infrastructure → Application + Domain
+$ dotnet add LibrarySystem.Infrastructure \
+    reference LibrarySystem.Application \
+              LibrarySystem.Domain
+
+# API → Application + Infrastructure
+$ dotnet add LibrarySystem.API \
+    reference LibrarySystem.Application \
+              LibrarySystem.Infrastructure</pre>
+      </div>
+      <div class="st vcenter" style="--i:3;display:flex">
+        <svg viewBox="0 0 520 420" style="width:100%">
+          <defs>
+            <marker id="arrRef" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#8b7ff5"/>
+            </marker>
+          </defs>
+          <rect x="30" y="20" width="200" height="64" rx="12" fill="#141824" stroke="#232936" stroke-width="2"/>
+          <text x="130" y="58" text-anchor="middle" fill="#e8eaf0" font-size="20" font-weight="600">API</text>
+          <rect x="290" y="150" width="200" height="64" rx="12" fill="#141824" stroke="#232936" stroke-width="2"/>
+          <text x="390" y="188" text-anchor="middle" fill="#e8eaf0" font-size="20" font-weight="600">Infrastructure</text>
+          <rect x="30" y="200" width="200" height="64" rx="12" fill="#141824" stroke="#232936" stroke-width="2"/>
+          <text x="130" y="238" text-anchor="middle" fill="#e8eaf0" font-size="20" font-weight="600">Application</text>
+          <rect x="30" y="336" width="200" height="64" rx="12" fill="rgba(139,127,245,.14)" stroke="#8b7ff5" stroke-width="2.5"/>
+          <text x="130" y="374" text-anchor="middle" fill="#e8eaf0" font-size="20" font-weight="700">Domain</text>
+          <g stroke="#8b7ff5" stroke-width="2.2" fill="none" marker-end="url(#arrRef)">
+            <line x1="130" y1="84" x2="130" y2="196"/>
+            <path d="M 230 52 L 390 52 L 390 146"/>
+            <line x1="290" y1="196" x2="234" y2="222"/>
+            <path d="M 390 214 L 390 368 L 234 368"/>
+            <line x1="130" y1="264" x2="130" y2="332"/>
+          </g>
+          <text x="255" y="300" fill="#5c6577" font-size="14" class="mono">→ references</text>
+        </svg>
+        <p class="small" style="margin-top:.6vw">Domain references <strong>nothing</strong>. Try adding Infrastructure → API: the compiler will refuse the cycle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 13 · PROJECT STRUCTURE TREE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The Library System skeleton</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:1">
+        <pre class="code big" data-lang="tree">LibrarySystem
+├── LibrarySystem.Domain
+│   └── Book.cs
+├── LibrarySystem.Application
+│   ├── Interfaces
+│   │   └── IBookRepository.cs
+│   └── Services
+│       └── BookService.cs
+├── LibrarySystem.Infrastructure
+│   └── Repositories
+│       └── InMemoryBookRepository.cs
+└── LibrarySystem.API
+    └── Program.cs</pre>
+      </div>
+      <div class="st" style="--i:2;display:flex;flex-direction:column;gap:1vw">
+        <div class="panel"><h3>Domain</h3><p>The business model. <strong>Book.cs</strong> — no framework, no database, no HTTP.</p></div>
+        <div class="panel"><h3>Application</h3><p>Use cases + the <strong>abstractions they need</strong> (IBookRepository).</p></div>
+        <div class="panel"><h3>Infrastructure</h3><p>Implementations of those abstractions — swappable details.</p></div>
+        <div class="panel"><h3>API</h3><p>HTTP endpoints + the <strong>composition root</strong> that wires everything together.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 14 · DEPENDENCY DIRECTION / COMPOSITION ROOT ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">“Wait — why does API reference Infrastructure?”</h2>
+    <div class="cols cols-2" style="margin-top:1.8vw">
+      <div class="st" style="--i:1">
+        <table class="cmp">
+          <tr><th>Project</th><th>References</th></tr>
+          <tr><td>Domain</td><td>— nothing</td></tr>
+          <tr><td>Application</td><td>Domain</td></tr>
+          <tr><td>Infrastructure</td><td>Application + Domain</td></tr>
+          <tr><td>API</td><td>Application + Infrastructure</td></tr>
+        </table>
+        <div class="panel bad" style="margin-top:1.2vw">
+          <p style="font-size:1.02vw"><strong>Never</strong>: Application → Infrastructure. The moment use cases name concrete implementations, the architecture is dead.</p>
+        </div>
+      </div>
+      <div class="st" style="--i:2">
+        <div class="panel accented">
+          <h3>API is the composition root</h3>
+          <p style="font-size:1.05vw">Someone has to say <em>“when code asks for IBookRepository, hand it an InMemoryBookRepository.”</em></p>
+          <p style="font-size:1.05vw;margin-top:.8vw">That wiring happens <strong>once</strong>, at the outermost edge — in <span class="acc">Program.cs</span>. That’s why API may see Infrastructure: it registers concrete types, it never uses them in business logic.</p>
+        </div>
+        <div class="flow" style="margin-top:1.2vw;justify-content:center">
+          <div class="node">Program.cs</div><div class="arr">registers</div>
+          <div class="node hot">IBookRepository → InMemoryBookRepository</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============ 15 · DIP: THE PRINCIPLE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Concept · SOLID — the “D”</div>
+    <h2 class="st" style="--i:1">Dependency Inversion Principle</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">BAD — high-level code depends on a concrete class</div>
+        <pre class="code big" data-lang="csharp">public class UserService
+{
+    private readonly SqlUserRepository _repository;
+
+    public UserService()
+    {
+        _repository = new SqlUserRepository();
+    }
+}</pre>
+        <p class="sub st" style="--i:3;margin-top:1vw;font-size:1.02vw">UserService <strong>names</strong> and <strong>creates</strong> its dependency. It is welded to SQL forever.</p>
+      </div>
+      <div class="st vcenter" style="--i:4;display:flex;gap:1.2vw">
+        <div class="panel accented">
+          <p style="font-size:1.35vw;color:var(--text);line-height:1.5">High-level code should depend on <strong class="acc">abstractions</strong> —<br>not concrete implementations.</p>
+        </div>
+        <div class="flow-v">
+          <div class="node">UserService <span class="note">high-level policy</span></div>
+          <div class="arr">↓ depends on</div>
+          <div class="node hot">IUserRepository <span class="note">abstraction</span></div>
+          <div class="arr">↑ implements</div>
+          <div class="node">SqlUserRepository <span class="note">low-level detail</span></div>
+        </div>
+        <p class="small center">The detail now depends on the abstraction. The arrow got <strong>inverted</strong> — hence the name.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 16 · REFACTOR TOWARD ABSTRACTION ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">Refactor: introduce the abstraction</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:1">
+        <div class="code-title">the abstraction + the detail</div>
+        <pre class="code" data-lang="csharp">public interface IUserRepository
+{
+    string GetUserName(int id);
+}
+
+public class SqlUserRepository : IUserRepository
+{
+    public string GetUserName(int id)
+    {
+        return $"SQL User - {id}";
+    }
+}</pre>
+      </div>
+      <div class="st" style="--i:2">
+        <div class="code-title">the high-level class — now DIP-compliant</div>
+        <pre class="code" data-lang="csharp">public class UserService
+{
+    private readonly IUserRepository _repository;
+
+    public UserService(IUserRepository repository)
+    {
+        _repository = repository;
+    }
+}</pre>
+        <div class="panel good" style="margin-top:1vw">
+          <p style="font-size:1.02vw">UserService no longer knows <em>which</em> repository exists. Swap SQL → InMemory → Mongo: <strong>zero changes</strong> here.</p>
+        </div>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:3;margin:1.6vw auto 0">But someone still has to <strong>create</strong> the concrete object and pass it in. Who?</p>
+  </div>
+</section>
+
+<!-- ============ 17 · DI: THE TECHNIQUE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Technique</div>
+    <h2 class="st" style="--i:1">Dependency Injection <span class="dim">— supply dependencies from outside</span></h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">manual DI — no framework, no magic</div>
+        <pre class="code big" data-lang="csharp">IUserRepository repository =
+    new SqlUserRepository();
+
+var service = new UserService(repository);</pre>
+        <div class="panel" style="margin-top:1.2vw">
+          <p style="font-size:1.05vw">This <strong>is</strong> dependency injection. Two lines. No container, no library, no attribute.</p>
+        </div>
+      </div>
+      <div class="st" style="--i:3;display:flex;flex-direction:column;gap:1vw">
+        <div class="panel accented">
+          <h3>DIP ≠ DI</h3>
+          <p style="font-size:1.05vw"><strong class="acc">DIP</strong> is a design <strong>principle</strong>: <em>what</em> to depend on (abstractions).<br><br>
+          <strong class="acc">DI</strong> is a <strong>technique</strong>: <em>how</em> dependencies arrive (from outside, usually via the constructor).</p>
+        </div>
+        <div class="panel">
+          <h3>And DI does <span style="color:var(--bad)">not</span> require a container</h3>
+          <p style="font-size:1.05vw">The code on the left injects dependencies with plain <span style="font-family:var(--mono)">new</span>. A container is a convenience we add next — not a prerequisite.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 18 · DI CONTAINER ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Tool · framework mechanism</div>
+    <h2 class="st" style="--i:1">The .NET DI Container <span class="dim">— automate the wiring</span></h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">register once…</div>
+        <pre class="code big" data-lang="csharp">services.AddScoped&lt;IUserRepository,
+                   SqlUserRepository&gt;();
+services.AddScoped&lt;UserService&gt;();
+
+var provider = services.BuildServiceProvider();</pre>
+      </div>
+      <div class="st" style="--i:3">
+        <div class="code-title">…resolve anywhere</div>
+        <pre class="code big" data-lang="csharp">var userService =
+    provider.GetRequiredService&lt;UserService&gt;();
+
+// container built SqlUserRepository,
+// injected it into UserService,
+// and handed us the finished object graph</pre>
+      </div>
+    </div>
+    <p class="sub st" style="--i:4;margin-top:1.4vw">Manually <span style="font-family:var(--mono)">new</span>-ing 3 objects is fine. 300 objects with lifetimes? That’s what the container automates.</p>
+  </div>
+</section>
+
+<!-- ============ 19 · CONTAINER INTERNALS VISUAL ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">What the container actually does</h2>
+    <div class="cols cols-2" style="margin-top:1.8vw">
+      <div class="st" style="--i:1">
+        <h3 style="font-size:1.1vw;margin-bottom:.8vw"><span class="tag acc">1</span>&nbsp; BuildServiceProvider() <span class="dim">— freeze the recipe book</span></h3>
+        <table class="cmp">
+          <tr><th>Service asked for</th><th>Build recipe</th><th>Lifetime</th></tr>
+          <tr><td style="font-family:var(--mono);font-size:.92vw">IUserRepository</td><td style="font-family:var(--mono);font-size:.92vw">new SqlUserRepository()</td><td>Scoped</td></tr>
+          <tr><td style="font-family:var(--mono);font-size:.92vw">UserService</td><td style="font-family:var(--mono);font-size:.92vw">new UserService(resolve(IUserRepository))</td><td>Scoped</td></tr>
+        </table>
+      </div>
+      <div class="st" style="--i:2">
+        <h3 style="font-size:1.1vw;margin-bottom:.8vw"><span class="tag acc">2</span>&nbsp; GetRequiredService&lt;UserService&gt;() <span class="dim">— walk the graph</span></h3>
+        <div class="flow-v" style="align-items:stretch">
+          <div class="node">Need <strong>UserService</strong> → constructor wants IUserRepository</div>
+          <div class="arr">↓</div>
+          <div class="node">Look up <strong>IUserRepository</strong> → recipe says SqlUserRepository</div>
+          <div class="arr">↓</div>
+          <div class="node">Construct <strong>SqlUserRepository</strong></div>
+          <div class="arr">↓</div>
+          <div class="node hot">Construct <strong>UserService(repository)</strong> → return it</div>
+        </div>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:3;margin:1.8vw auto 0">Recursive constructor resolution + lifetime management. No magic — just automated <strong>manual DI</strong>.</p>
+  </div>
+</section>
+
+<!-- ============ 20 · THE LADDER ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="center st" style="--i:0">Three different things — keep them separate</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.4vw;margin-top:2.6vw">
+      <div class="panel st" style="--i:1">
+        <div class="label-acc">Principle</div>
+        <h3 style="font-size:1.6vw">DIP</h3>
+        <p style="font-size:1.1vw;margin-top:.6vw">“Depend on abstractions.”</p>
+        <p class="small" style="margin-top:.8vw">A design rule. Exists on paper — no code required.</p>
+      </div>
+      <div class="panel st" style="--i:2">
+        <div class="label-acc">Technique</div>
+        <h3 style="font-size:1.6vw">DI</h3>
+        <p style="font-size:1.1vw;margin-top:.6vw">“Provide dependencies from outside.”</p>
+        <p class="small" style="margin-top:.8vw">A way of constructing objects. Works with plain <span style="font-family:var(--mono)">new</span>.</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <div class="label-acc">Tool</div>
+        <h3 style="font-size:1.6vw">DI Container</h3>
+        <p style="font-size:1.1vw;margin-top:.6vw">“Automate dependency resolution.”</p>
+        <p class="small" style="margin-top:.8vw">A framework mechanism: registrations, lifetimes, object graphs.</p>
+      </div>
+    </div>
+    <div class="flow st" style="--i:4;justify-content:center;margin-top:2.4vw">
+      <div class="node">DIP tells us <strong>what</strong></div><div class="arr">→</div>
+      <div class="node">DI tells us <strong>how</strong></div><div class="arr">→</div>
+      <div class="node hot">The container does it <strong>at scale</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 21 · REPOSITORY ABSTRACTION ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">Applying it: the repository abstraction</h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:1">
+        <div class="code-title">Application · owns the abstraction it needs</div>
+        <pre class="code" data-lang="csharp">public interface IBookRepository
+{
+    Task&lt;Book?&gt; GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken);
+}</pre>
+        <div class="code-title" style="margin-top:1vw">Application · the service depends on it</div>
+        <pre class="code" data-lang="csharp">public class BookService
+{
+    private readonly IBookRepository _repository;
+
+    public BookService(IBookRepository repository)
+    {
+        _repository = repository;
+    }
+}</pre>
+      </div>
+      <div class="st" style="--i:2">
+        <div class="code-title">Infrastructure · provides the implementation</div>
+        <pre class="code" data-lang="csharp">public class InMemoryBookRepository : IBookRepository
+{
+    public Task&lt;Book?&gt; GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var book = new Book(
+            id,
+            "Clean Architecture");
+
+        return Task.FromResult&lt;Book?&gt;(book);
+    }
+}</pre>
+        <div class="panel accented" style="margin-top:1vw">
+          <p style="font-size:1.05vw"><strong>The Application layer owns the abstraction it needs.</strong><br>Infrastructure provides the implementation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 22 · REPOSITORY GUARDRAIL ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Guardrail</div>
+    <h2 class="st" style="--i:1">The Repository Pattern doesn’t dictate<br>where the interface lives</h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="panel st" style="--i:2">
+        <h3>The pattern says</h3>
+        <p style="font-size:1.1vw">“Put an abstraction between business logic and data access.”</p>
+        <p class="small" style="margin-top:.8vw">That’s all. Nothing about folders, projects, or namespaces.</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <h3>The <span class="acc">architecture</span> decides placement</h3>
+        <p style="font-size:1.1vw">Because our dependencies point inward, the interface lives in <strong>Application</strong> — the layer that needs it — and the implementation lives at the edge.</p>
+        <p class="small" style="margin-top:.8vw">Different architecture → possibly a different placement. The dependency direction is the reason, not the pattern.</p>
+      </div>
+    </div>
+    <div class="flow st" style="--i:4;justify-content:center;margin-top:2.2vw">
+      <div class="node">Application defines <strong>IBookRepository</strong></div>
+      <div class="arr">←</div>
+      <div class="node">Infrastructure implements <strong>InMemoryBookRepository</strong></div>
+      <div class="arr">←</div>
+      <div class="node hot">API wires them in Program.cs</div>
+    </div>
+  </div>
+</section>
+<!-- ============ 23 · CQRS: THE PROBLEM ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Next problem</div>
+    <h2 class="st" style="--i:1">The service that does everything</h2>
+    <div class="cols cols-2" style="margin-top:1.4vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">BookService.cs — six months later</div>
+        <pre class="code big" data-lang="csharp">public class BookService
+{
+    public Task CreateBook(...)   { }
+    public Task UpdateBook(...)   { }
+    public Task DeleteBook(...)   { }
+
+    public Task&lt;Book?&gt;      GetBook(...)     { }
+    public Task&lt;List&lt;Book&gt;&gt; GetBooks(...)    { }
+    public Task&lt;List&lt;Book&gt;&gt; SearchBooks(...) { }
+}</pre>
+      </div>
+      <div class="st vcenter" style="--i:3;display:flex;gap:1vw">
+        <div class="panel bad">
+          <h3>Two very different jobs, one class</h3>
+          <p style="font-size:1.05vw">Writes need validation, rules, transactions.<br>Reads need speed, shaping, filtering, paging.</p>
+        </div>
+        <div class="panel">
+          <p style="font-size:1.05vw">They <strong>change for different reasons</strong>, at different speeds, with different performance profiles — yet they share one model and one class that keeps growing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 24 · COMMANDS VS QUERIES ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The concept: separate <span class="acc">intent</span></h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="panel st" style="--i:1;border-color:var(--accent-line)">
+        <div class="label-acc">Commands — change state</div>
+        <div style="font-family:var(--mono);font-size:1.25vw;line-height:2.2;color:var(--text)">
+          CreateBook<br>UpdateBook<br>DeleteBook
+        </div>
+        <p style="margin-top:1vw;font-size:1vw">Validated. Authorized. Transactional. Return little or nothing.</p>
+      </div>
+      <div class="panel st" style="--i:2">
+        <div class="label-acc" style="color:var(--good)">Queries — read state</div>
+        <div style="font-family:var(--mono);font-size:1.25vw;line-height:2.2;color:var(--text)">
+          GetBook<br>GetBooks<br>SearchBooks
+        </div>
+        <p style="margin-top:1vw;font-size:1vw">Side-effect free. Shaped for the caller. Optimizable independently.</p>
+      </div>
+    </div>
+    <div class="panel accented st" style="--i:3;margin-top:1.8vw">
+      <p style="font-size:1.2vw;color:var(--text)"><strong>CQRS</strong> — Command Query Responsibility Segregation: give writes and reads <strong>separate paths</strong>, so each can evolve on its own terms.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 25 · CQRS GUARDRAIL ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Guardrail</div>
+    <h2 class="st" style="--i:1">CQRS does <span style="color:var(--bad)">not</span> mean two databases</h2>
+    <div class="cols cols-2" style="margin-top:2vw">
+      <div class="panel st" style="--i:2">
+        <h3>What CQRS requires</h3>
+        <p style="font-size:1.1vw">Separate <strong>code paths</strong> for commands and queries. That’s the whole contract.</p>
+        <div class="flow" style="margin-top:1vw">
+          <div class="node">Commands</div><div class="arr">→</div><div class="node hot">one database</div><div class="arr">←</div><div class="node">Queries</div>
+        </div>
+        <p class="small" style="margin-top:1vw">Our Library System: one store, two paths. Fully CQRS.</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <h3>What’s optional (and advanced)</h3>
+        <p style="font-size:1.1vw">Separate read/write stores, replicas, projections, event sourcing — <strong>possible extensions</strong>, each with heavy consistency trade-offs.</p>
+        <p class="small" style="margin-top:1vw">Don’t pay that cost until a real problem demands it. We won’t.</p>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:4;margin:2vw auto 0">Start with the simplest CQRS that solves <em>today’s</em> problem: <strong>separated handlers over one store</strong>.</p>
+  </div>
+</section>
+
+<!-- ============ 26 · MEDIATOR PATTERN ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">How do requests find their handler?</h2>
+    <div class="cols cols-23" style="margin-top:1.6vw">
+      <div class="st vcenter" style="--i:1;display:flex;gap:1vw">
+        <div class="panel">
+          <h3>Mediator pattern</h3>
+          <p style="font-size:1.08vw">A communication pattern: senders hand a request to a <strong>mediator</strong>, which routes it to exactly one handler. Sender and handler never know each other.</p>
+        </div>
+        <div class="panel accented">
+          <h3>Why it fits CQRS</h3>
+          <p style="font-size:1.08vw">The endpoint doesn’t call BookService anymore. It dispatches <span style="font-family:var(--mono)">CreateBookCommand</span> — and the matching handler picks it up. One request type → one handler → one responsibility.</p>
+        </div>
+      </div>
+      <div class="st" style="--i:2">
+        <div class="flow-v" style="align-items:stretch">
+          <div class="node">Controller / Endpoint <span class="note">knows only the request type</span></div>
+          <div class="arr">↓ send(request)</div>
+          <div class="node hot">Mediator <span class="note">routes by type</span></div>
+          <div class="arr">↓</div>
+          <div class="node">Command / Query Handler <span class="note">one class, one use case</span></div>
+          <div class="arr">↓</div>
+          <div class="node">Application logic <span class="note">repositories, domain, rules</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 27 · MEDIATR: COMMAND SIDE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Implementation · MediatR</div>
+    <h2 class="st" style="--i:1">The write path: <span class="acc">CreateBook</span></h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">Application/Commands/Books/CreateBook</div>
+        <pre class="code" data-lang="csharp">public record CreateBookCommand(
+    Guid Id,
+    string Title
+) : IRequest&lt;Guid&gt;;</pre>
+        <div class="panel" style="margin-top:1vw">
+          <p style="font-size:1vw">The command is a <strong>message</strong> — immutable data describing intent. <span style="font-family:var(--mono)">IRequest&lt;Guid&gt;</span> declares what it returns.</p>
+        </div>
+      </div>
+      <div class="st" style="--i:3">
+        <div class="code-title">its one and only handler</div>
+        <pre class="code" data-lang="csharp">public class CreateBookHandler
+    : IRequestHandler&lt;CreateBookCommand, Guid&gt;
+{
+    private readonly IBookRepository _repository;
+
+    public CreateBookHandler(IBookRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task&lt;Guid&gt; Handle(
+        CreateBookCommand request,
+        CancellationToken cancellationToken)
+    {
+        var book = new Book(request.Id, request.Title);
+
+        await _repository.AddAsync(book, cancellationToken);
+
+        return book.Id;
+    }
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 28 · MEDIATR: QUERY SIDE + ENDPOINT ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The read path: <span class="acc">GetBook</span></h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:1">
+        <div class="code-title">Application/Queries/Books/GetBook</div>
+        <pre class="code" data-lang="csharp">public record GetBookQuery(
+    Guid Id
+) : IRequest&lt;Book?&gt;;
+
+public class GetBookHandler
+    : IRequestHandler&lt;GetBookQuery, Book?&gt;
+{
+    private readonly IBookRepository _repository;
+
+    public GetBookHandler(IBookRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task&lt;Book?&gt; Handle(
+        GetBookQuery request,
+        CancellationToken cancellationToken)
+    {
+        return await _repository.GetByIdAsync(
+            request.Id, cancellationToken);
+    }
+}</pre>
+      </div>
+      <div class="st" style="--i:2">
+        <div class="code-title">API/Program.cs — the endpoint just dispatches</div>
+        <pre class="code" data-lang="csharp">app.MapGet("/books/{id:guid}",
+    async (
+        Guid id,
+        ISender sender,
+        CancellationToken cancellationToken) =>
+    {
+        var query = new GetBookQuery(id);
+
+        var book = await sender.Send(
+            query, cancellationToken);
+
+        return book is null
+            ? Results.NotFound()
+            : Results.Ok(book);
+    });</pre>
+        <div class="panel good" style="margin-top:1vw">
+          <p style="font-size:1vw">The endpoint knows <strong>no service, no repository</strong> — only the query type and the mediator.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 29 · WIRING IT ALL ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">Composition root: everything meets in Program.cs</h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:1">
+        <pre class="code" data-lang="csharp">var builder = WebApplication.CreateBuilder(args);
+
+// abstraction → implementation
+builder.Services
+    .AddSingleton&lt;IBookRepository,
+                  InMemoryBookRepository&gt;();
+
+// discover all handlers in Application
+builder.Services.AddMediatR(config =>
+    config.RegisterServicesFromAssembly(
+        typeof(CreateBookCommand).Assembly));
+
+var app = builder.Build();</pre>
+      </div>
+      <div class="st" style="--i:2;display:flex;flex-direction:column;gap:1vw">
+        <div class="panel">
+          <h3>Install the pieces</h3>
+          <pre class="code small-code" data-lang="bash" style="margin-top:.5vw">$ dotnet add LibrarySystem.Application \
+    package MediatR
+$ dotnet add LibrarySystem.API \
+    package MediatR</pre>
+        </div>
+        <div class="panel accented">
+          <h3>Note the lifetime choice</h3>
+          <p style="font-size:1.02vw"><span style="font-family:var(--mono)">Singleton</span> fits an in-memory list that must survive across requests. When EF Core arrives in Session 2, this becomes <span style="font-family:var(--mono)">Scoped</span> — lifetimes are a <strong>decision</strong>, not a default.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 30 · CQRS ≠ MEDIATR ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Guardrail</div>
+    <h2 class="st" style="--i:1">CQRS ≠ Mediator ≠ MediatR</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.4vw;margin-top:2.2vw">
+      <div class="panel st" style="--i:2">
+        <div class="label-acc">Design pattern</div>
+        <h3 style="font-size:1.5vw">CQRS</h3>
+        <p style="font-size:1.05vw;margin-top:.5vw">Separate the responsibility for reads and writes.</p>
+        <p class="small" style="margin-top:.7vw">Achievable with plain classes — no mediator needed.</p>
+      </div>
+      <div class="panel st" style="--i:3">
+        <div class="label-acc">Communication pattern</div>
+        <h3 style="font-size:1.5vw">Mediator</h3>
+        <p style="font-size:1.05vw;margin-top:.5vw">Decouple senders from receivers through a middleman.</p>
+        <p class="small" style="margin-top:.7vw">Useful far beyond CQRS.</p>
+      </div>
+      <div class="panel st" style="--i:4">
+        <div class="label-acc">.NET library</div>
+        <h3 style="font-size:1.5vw">MediatR</h3>
+        <p style="font-size:1.05vw;margin-top:.5vw">One popular implementation of mediator-style request handling.</p>
+        <p class="small" style="margin-top:.7vw">A tool we chose — not the concept itself.</p>
+      </div>
+    </div>
+    <p class="center sub st" style="--i:5;margin:2.2vw auto 0">We use MediatR to <strong>implement</strong> CQRS conveniently.<br>Delete the library tomorrow — the pattern and the principle survive.</p>
+  </div>
+</section>
+<!-- ============ 31 · LOGGING: THE CONCEPT ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Concept · before any tool</div>
+    <h2 class="st" style="--i:1">Why do applications log?</h2>
+    <div class="cols cols-23" style="margin-top:1.6vw">
+      <div class="st" style="--i:2">
+        <div class="flow-v" style="align-items:stretch">
+          <div class="node">Why logs exist <span class="note">the system must explain itself after the fact</span></div>
+          <div class="arr">↓</div>
+          <div class="node">What should be logged <span class="note">requests · business events · failures</span></div>
+          <div class="arr">↓</div>
+          <div class="node hot">Structured logging <span class="note">properties, not sentences — machines query logs</span></div>
+          <div class="arr">↓</div>
+          <div class="node">Levels <span class="note">Debug · Information · Warning · Error</span></div>
+        </div>
+      </div>
+      <div class="st" style="--i:3">
+        <div class="code-title">unstructured — a sentence you can only read</div>
+        <pre class="code small-code" data-lang="log">"Book 4f2a… created by member 812 in 34ms"</pre>
+        <div class="code-title" style="margin-top:1vw">structured — data you can query</div>
+        <pre class="code small-code" data-lang="json">{
+  "Message": "Book created",
+  "BookId": "4f2a…",
+  "MemberId": 812,
+  "ElapsedMs": 34,
+  "Level": "Information"
+}</pre>
+        <div class="panel" style="margin-top:1vw">
+          <p style="font-size:1vw">“Show me every failed checkout for member 812 this week” — only possible when log events carry <strong>structured properties</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 32 · SERILOG: THE IMPLEMENTATION ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Tool · implementation</div>
+    <h2 class="st" style="--i:1">Serilog <span class="dim">— our logging implementation</span></h2>
+    <div class="cols cols-2" style="margin-top:1.2vw">
+      <div class="st" style="--i:2">
+        <div class="code-title">API/Program.cs — plug Serilog in once</div>
+        <pre class="code" data-lang="csharp">builder.Host.UseSerilog((context, config) =>
+    config
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console());
+
+// log every HTTP request as one structured event
+app.UseSerilogRequestLogging();</pre>
+        <pre class="code small-code" data-lang="bash" style="margin-top:1vw">$ dotnet add LibrarySystem.API \
+    package Serilog.AspNetCore</pre>
+      </div>
+      <div class="st" style="--i:3">
+        <div class="code-title">handlers log through the abstraction</div>
+        <pre class="code" data-lang="csharp">public class CreateBookHandler
+    : IRequestHandler&lt;CreateBookCommand, Guid&gt;
+{
+    private readonly IBookRepository _repository;
+    private readonly ILogger&lt;CreateBookHandler&gt; _logger;
+
+    public async Task&lt;Guid&gt; Handle(
+        CreateBookCommand request,
+        CancellationToken cancellationToken)
+    {
+        var book = new Book(request.Id, request.Title);
+        await _repository.AddAsync(book, cancellationToken);
+
+        // business event, structured properties
+        _logger.LogInformation(
+            "Book {BookId} created with title {Title}",
+            book.Id, book.Title);
+
+        return book.Id;
+    }
+}</pre>
+      </div>
+    </div>
+    <div class="flow st" style="--i:4;justify-content:center;margin-top:1.3vw">
+      <div class="node">Your code</div><div class="arr">→</div>
+      <div class="node hot">ILogger&lt;T&gt; <span class="note">abstraction</span></div><div class="arr">→</div>
+      <div class="node">Serilog <span class="note">implementation</span></div><div class="arr">→</div>
+      <div class="node">Console · files · sinks</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 33 · V1 ACHIEVED ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="kicker st" style="--i:0">Session 1 · shipped</div>
+    <h2 class="st" style="--i:1">Same system — <span class="acc">measurably better</span></h2>
+    <div class="cols cols-2" style="margin-top:1.6vw">
+      <div class="panel bad st" style="--i:2">
+        <div class="label-bad">V0 this morning</div>
+        <ul class="checklist xmarks">
+          <li>One class doing everything</li>
+          <li><span style="font-family:var(--mono)">new SqlBookRepository()</span> welded in</li>
+          <li>Reads and writes tangled</li>
+          <li>Console.WriteLine debugging</li>
+        </ul>
+      </div>
+      <div class="panel good st" style="--i:3">
+        <div class="label-good">V1 now</div>
+        <ul class="checklist checks">
+          <li>4 projects — compiler-enforced inward dependencies</li>
+          <li>DIP → DI → container-managed object graphs</li>
+          <li>Commands &amp; queries as separate handlers (MediatR)</li>
+          <li>Structured logging on every request (Serilog)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="st" style="--i:4;margin-top:2.6vw">
+      <div class="evo">
+        <div class="step done"><span class="dot"></span><span class="v">V0</span><span class="t">Basic CRUD</span></div>
+        <div class="step here"><span class="dot"></span><span class="v">V1</span><span class="t">Maintainable &amp; structured</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V2</span><span class="t">DB-performance optimized</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V3</span><span class="t">Cached</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V4</span><span class="t">Async / background</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V5</span><span class="t">Real-time</span></div>
+        <div class="step"><span class="dot"></span><span class="v">V6</span><span class="t">Deployable &amp; observable</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 34 · NEXT PROBLEM TEASE ============ -->
+<section class="slide">
+  <div class="wrap center">
+    <div class="kicker st" style="--i:0">The loop continues</div>
+    <h2 class="st" style="--i:1">V1 has a problem it doesn’t know about yet</h2>
+    <div class="flow st" style="--i:2;justify-content:center;margin-top:2.4vw">
+      <div class="node ok">100 records <span class="note">instant</span></div>
+      <div class="arr">→</div>
+      <div class="node">100,000 records <span class="note">noticeably slow</span></div>
+      <div class="arr">→</div>
+      <div class="node err">1,000,000 records <span class="note">timeouts, angry users</span></div>
+    </div>
+    <p class="lead st" style="--i:3;margin:2.4vw auto 0;max-width:48ch">Our clean architecture says nothing about <strong>what SQL our queries generate</strong>.</p>
+    <div class="st" style="--i:4;margin-top:2vw">
+      <span class="tag acc">Session 2 — EF Core: measure → inspect SQL → optimize → measure again</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 35 · TAXONOMY LADDER ============ -->
+<section class="slide">
+  <div class="wrap">
+    <h2 class="st" style="--i:0">The mental model to keep <span class="dim">— all track long</span></h2>
+    <div style="margin-top:1.8vw" class="st st-table">
+      <table class="cmp" style="font-size:1.08vw">
+        <tr><th style="width:22%">Layer</th><th>Session 1</th><th>Coming next</th></tr>
+        <tr class="st" style="--i:1"><td><span class="tag acc">Principle</span></td><td>DIP — depend on abstractions</td><td>—</td></tr>
+        <tr class="st" style="--i:2"><td><span class="tag acc">Pattern</span></td><td>CQRS · Mediator · Repository</td><td>Cache-aside · producer/worker</td></tr>
+        <tr class="st" style="--i:3"><td><span class="tag acc">Technique</span></td><td>Dependency Injection · structured logging</td><td>Caching · pagination · projection</td></tr>
+        <tr class="st" style="--i:4"><td><span class="tag acc">Framework feature</span></td><td>.NET DI container · ILogger&lt;T&gt;</td><td>IMemoryCache · BackgroundService · output caching</td></tr>
+        <tr class="st" style="--i:5"><td><span class="tag acc">Tool</span></td><td>MediatR · Serilog</td><td>EF Core · Redis · Hangfire · SignalR · Docker</td></tr>
+      </table>
+    </div>
+    <p class="center sub st" style="--i:6;margin:2vw auto 0">Tools change every few years. <strong>Principles, patterns and techniques transfer</strong> — that’s what we’re really learning.</p>
+  </div>
+</section>
+
+<!-- ============ 36 · CLOSE ============ -->
+<section class="slide">
+  <div class="wrap center">
+    <div class="kicker st" style="--i:0">Deep Dive 2026 · Backend Engineering using .NET</div>
+    <h1 class="st" style="--i:1;font-size:3.6vw">The system works.<br><span class="acc">Now let’s make it fast.</span></h1>
+    <div class="flow st" style="--i:2;justify-content:center;margin-top:3vw">
+      <div class="node ok">V1 — maintainable</div>
+      <div class="arr">→</div>
+      <div class="node hot">Session 2 — EF Core optimizations</div>
+      <div class="arr">→</div>
+      <div class="node">N+1 · AsNoTracking · AsSplitQuery · pagination · projection</div>
+    </div>
+    <p class="sub st center" style="--i:3;margin:3vw auto 0">Bring the V1 code — we break it with data, then fix it.</p>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<!-- ============ HUD ============ -->
+<div class="hud">
+  <div class="brand">Deep Dive 2026 · S1 — Architecture</div>
+  <div class="navbtns">
+    <button id="prev" aria-label="Previous slide">←</button>
+    <div class="counter" id="counter">1 / 1</div>
+    <button id="next" aria-label="Next slide">→</button>
+  </div>
+</div>
+
+<script>
+/* ============ tiny offline syntax highlighter ============ */
+(function(){
+  const KW = /\b(using|namespace|public|private|protected|internal|static|readonly|sealed|override|virtual|abstract|class|interface|record|struct|enum|void|var|string|int|bool|double|decimal|object|async|await|return|new|null|true|false|is|not|get|set|init|if|else|foreach|for|in|while|do|switch|case|break|continue|try|catch|finally|throw|this|base|out|ref|params|typeof|nameof|where|when|yield|partial|event|delegate|operator|implicit|explicit|const)\b/g;
+
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+  function hlCSharp(src){
+    let out = "";
+    const re = /(\/\/[^\n]*)|(\$?"(?:[^"\\\n]|\\.)*")|('\w')|(\b\d[\d_\.]*\b)/g;
+    let last = 0, m;
+    function plain(txt){
+      return txt
+        .replace(KW, '\u0001kw\u0002$&\u0001/\u0002')
+        .replace(/\b([A-Z][A-Za-z0-9_]*)\b/g, '\u0001ty\u0002$1\u0001/\u0002');
+    }
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      if(m[1]) out += '\u0001com\u0002' + m[1] + '\u0001/\u0002';
+      else if(m[2]) out += '\u0001str\u0002' + m[2] + '\u0001/\u0002';
+      else if(m[3]) out += '\u0001str\u0002' + m[3] + '\u0001/\u0002';
+      else out += '\u0001num\u0002' + m[4] + '\u0001/\u0002';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    return esc(out)
+      .replace(/\u0001(kw|ty|str|com|num)\u0002/g, '<span class="tok-$1">')
+      .replace(/\u0001\/\u0002/g, '</span>');
+  }
+
+  function hlBash(src){
+    return esc(src).split("\n").map(line=>{
+      if(/^\s*#/.test(line)) return '<span class="tok-com">'+line+'</span>';
+      let l = line;
+      l = l.replace(/^(\$)(\s+)/, '<span class="tok-prompt">$1</span>$2');
+      l = l.replace(/\b(dotnet|mkdir|cd)\b/g, '<span class="tok-kw">$1</span>');
+      l = l.replace(/\b(new|sln|add|reference|package|run|build)\b/g, '<span class="tok-ty">$1</span>');
+      l = l.replace(/(\s)(-n|--project|-o)(\s)/g, '$1<span class="tok-flag">$2</span>$3');
+      return l;
+    }).join("\n");
+  }
+
+  function hlJson(src){
+    return esc(src)
+      .replace(/(&quot;|")([^"&]*?)\1(\s*:)/g, '<span class="tok-ty">"$2"</span>$3')
+      .replace(/: (".*?"|[\d\.]+)/g, ': <span class="tok-str">$1</span>');
+  }
+
+  document.querySelectorAll("pre.code").forEach(pre=>{
+    const lang = pre.dataset.lang;
+    const src = pre.textContent.replace(/^\n+|\s+$/g,"");
+    if(lang === "csharp") pre.innerHTML = hlCSharp(src);
+    else if(lang === "bash") pre.innerHTML = hlBash(src);
+    else if(lang === "json") pre.innerHTML = hlJson(src);
+    else pre.innerHTML = esc(src);
+  });
+})();
+
+/* ============ deck engine ============ */
+(function(){
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const progress = document.getElementById("progress");
+  const counter = document.getElementById("counter");
+  let cur = 0;
+
+  const fromHash = parseInt((location.hash || "").replace("#s",""), 10);
+  if(!isNaN(fromHash) && fromHash >= 1 && fromHash <= slides.length) cur = fromHash - 1;
+
+  function show(n){
+    cur = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s,i)=> s.classList.toggle("active", i === cur));
+    progress.style.width = ((cur + 1) / slides.length * 100) + "%";
+    counter.textContent = (cur + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#s" + (cur + 1));
+  }
+
+  document.getElementById("prev").addEventListener("click", ()=>show(cur - 1));
+  document.getElementById("next").addEventListener("click", ()=>show(cur + 1));
+
+  window.addEventListener("keydown", e=>{
+    if(e.key === "ArrowRight" || e.key === " " || e.key === "PageDown"){ e.preventDefault(); show(cur + 1); }
+    else if(e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); show(cur - 1); }
+    else if(e.key === "Home"){ e.preventDefault(); show(0); }
+    else if(e.key === "End"){ e.preventDefault(); show(slides.length - 1); }
+  });
+
+  window.addEventListener("hashchange", ()=>{
+    const n = parseInt((location.hash || "").replace("#s",""), 10);
+    if(!isNaN(n)) show(n - 1);
+  });
+
+  show(cur);
+})();
+</script>
+</body>
+</html>

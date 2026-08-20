@@ -1,0 +1,5 @@
+.vs/
+Tourism.API/appsettings.json
+Tourism.API/Logs
+**/bin/
+**/obj/

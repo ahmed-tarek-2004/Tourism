@@ -43,21 +43,21 @@ const Home = () => {
             image: trip.imageUrl,
             airline: trip.airline,
             transportationType: trip.transportationType, // تم إضافتها لتستخدم في الأيقونات لاحقاً
-            route: trip.transportationType === "Land"? ["برّي"]:
-             trip.transportationType === "Ship"? ["بحري"]:
-            // trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
-            //   ?
-               trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
-              // : ["بري"],
+            route: trip.transportationType === "Land" ? ["برّي"] :
+              trip.transportationType === "Ship" ? ["بحري"] :
+                // trip.transportationType === "Air" && trip.routes && trip.routes.length > 0
+                //   ?
+                trip.routes.sort((a, b) => a.order - b.order).map(r => r.name.trim())
+            // : ["بري"],
             ,
             hotels: [
               { name: trip.makkahHotel || "غير محدد", label: "سكن مكة المكرمة", nights: trip.makkahNights || 0 },
               { name: trip.madinahHotel || "غير محدد", label: "سكن المدينة المنورة", nights: trip.madinahNights || 0 }
             ],
             prices: {
-              quad: trip.quadruplePrice ?? "غير متاح",
-              triple: trip.triplePrice ?? "غير متاح",
-              double: trip.doublePrice ?? "غير متاح"
+              quad: trip.quadruplePrice > 0 ? trip.quadruplePrice : "غير متاح",
+              triple: trip.triplePrice > 0 ? trip.triplePrice : "غير متاح",
+              double: trip.doublePrice > 0 ? trip.doublePrice : "غير متاح"
             }
           }));
 
@@ -122,12 +122,12 @@ const Home = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data), 
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
         setFormMessage({ text: "تم إرسال طلبك بنجاح. سنتواصل معك قريباً.", type: "success" });
-        e.target.reset(); 
+        e.target.reset();
         setTimeout(() => setFormMessage({ text: '', type: '' }), 5000);
       } else {
         setFormMessage({ text: "حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.", type: "error" });
@@ -321,11 +321,10 @@ const Home = () => {
                           <h3>{trip.title}</h3>
                         </div>
                         <div className="airline">
-                          <i className={`fa-solid ${
-                              trip.transportationType === 'Land' ? 'fa-bus' : 
-                              trip.transportationType === 'Ship' ? 'fa-ship' : 
-                              'fa-plane'
-                          }`}></i>
+                          <i className={`fa-solid ${trip.transportationType === 'Land' ? 'fa-bus' :
+                              trip.transportationType === 'Ship' ? 'fa-ship' :
+                                'fa-plane'
+                            }`}></i>
                           <span>{trip.airline}</span>
                         </div>
                       </div>
@@ -432,7 +431,7 @@ const Home = () => {
             <h2>أقوى <strong>عروض الحج السياحي</strong></h2>
             <p>بادر بالحجز الآن واستفد من الخصم الحصري قبل صدور الضوابط الرسمية.</p>
           </div>
-          
+
           <div style={{
             background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
             borderRadius: 'var(--radius-lg)',
@@ -456,29 +455,29 @@ const Home = () => {
             }}></i>
 
             <div style={{ zIndex: 1 }}>
-              <span style={{ 
-                display: 'inline-flex', 
+              <span style={{
+                display: 'inline-flex',
                 alignItems: 'center',
-                background: 'rgba(255,255,255,0.1)', 
-                padding: '8px 16px', 
-                borderRadius: '30px', 
-                fontSize: '12px', 
-                fontWeight: 'bold', 
-                color: 'var(--gold-light)', 
-                marginBottom: '15px' 
+                background: 'rgba(255,255,255,0.1)',
+                padding: '8px 16px',
+                borderRadius: '30px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                color: 'var(--gold-light)',
+                marginBottom: '15px'
               }}>
                 الأكثر راحة وأمان ورفاهية
                 <i className="fa-solid fa-star" style={{ color: 'var(--gold)', marginRight: '8px' }}></i>
               </span>
-              
+
               <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '15px', lineHeight: '1.4' }}>
                 مين ناوي على <span style={{ color: 'var(--gold)' }}>الحج السياحي؟</span>
               </h3>
-              
-              <div style={{ 
-                background: 'linear-gradient(90deg, #c62828, #d32f2f)', 
-                padding: '20px 25px', 
-                borderRadius: '16px', 
+
+              <div style={{
+                background: 'linear-gradient(90deg, #c62828, #d32f2f)',
+                padding: '20px 25px',
+                borderRadius: '16px',
                 display: 'inline-block',
                 marginBottom: '20px',
                 boxShadow: '0 10px 20px rgba(198, 40, 40, 0.3)',
@@ -486,23 +485,23 @@ const Home = () => {
               }}>
                 <span style={{ display: 'block', fontSize: '14px', marginBottom: '5px', opacity: 0.9 }}>قدم على الحج معنا واحصل على خصم</span>
                 <strong style={{ display: 'block', fontSize: '42px', fontWeight: '900', color: '#fff', lineHeight: '1' }}>
-                  10,000 <small style={{fontSize: '20px', fontWeight: 'bold'}}>جنيه</small>
+                  10,000 <small style={{ fontSize: '20px', fontWeight: 'bold' }}>جنيه</small>
                 </strong>
                 <small style={{ fontSize: '11px', opacity: 0.8, display: 'block', marginTop: '5px' }}>من سعر البرنامج (بعد صدور الضوابط)</small>
               </div>
-              
+
               <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--gold-light)', marginBottom: '30px' }}>
                 "فقط اهتم بعبادتك.. ونحن بخدمتك"
               </p>
 
-              <a 
-                href="#contact" 
-                className="btn btn-white" 
+              <a
+                href="#contact"
+                className="btn btn-white"
                 onClick={() => {
                   const serviceSelect = document.getElementById('service');
                   const messageInput = document.getElementById('message');
-                  if(serviceSelect) serviceSelect.value = 'hajj';
-                  if(messageInput) messageInput.value = 'السلام عليكم، أرغب في الاستفسار عن عرض الحج السياحي (خصم 10,000 جنيه).';
+                  if (serviceSelect) serviceSelect.value = 'hajj';
+                  if (messageInput) messageInput.value = 'السلام عليكم، أرغب في الاستفسار عن عرض الحج السياحي (خصم 10,000 جنيه).';
                 }}
                 style={{ padding: '16px 35px', fontSize: '16px', fontWeight: 'bold', width: 'fit-content' }}
               >
@@ -511,7 +510,7 @@ const Home = () => {
             </div>
 
             <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
                 <div style={{ width: '55px', height: '55px', borderRadius: '12px', background: 'var(--gold)', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
                   <i className="fa-solid fa-users"></i>
@@ -535,19 +534,19 @@ const Home = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '5px' }}>
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <i className="fa-solid fa-hotel" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>فنادق فاخرة<br/>قريبة من الحرمين</span>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>فنادق فاخرة<br />قريبة من الحرمين</span>
                 </div>
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <i className="fa-solid fa-bus" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>مواصلات حديثة<br/>ومريحة</span>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>مواصلات حديثة<br />ومريحة</span>
                 </div>
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <i className="fa-solid fa-utensils" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>وجبات متنوعة<br/>عالية الجودة</span>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>وجبات متنوعة<br />عالية الجودة</span>
                 </div>
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <i className="fa-solid fa-headset" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>
-                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>خدمة متكاملة<br/>على مدار الساعة</span>
+                  <span style={{ display: 'block', fontSize: '12px', fontWeight: 'bold' }}>خدمة متكاملة<br />على مدار الساعة</span>
                 </div>
               </div>
 

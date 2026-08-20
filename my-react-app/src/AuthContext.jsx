@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
 
         setToken(null);
         localStorage.removeItem('adminToken');
-        
         navigate('/admin/login'); 
     };
 

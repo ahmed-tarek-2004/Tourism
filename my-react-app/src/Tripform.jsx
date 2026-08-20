@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext"; // استيراد الـ hook الخاص بالمصادقة
 
 const TripForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    
+    // جلب التوكن ودالة تسجيل الخروج من الـ Context
+    const { token, logout } = useAuth();
 
     const [isEditMode, setIsEditMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
     const [currentImageUrl, setCurrentImageUrl] = useState(null);
-
     const [formMessage, setFormMessage] = useState({ messages: [], type: "" });
 
     const [formData, setFormData] = useState({
@@ -56,7 +57,12 @@ const TripForm = () => {
             setIsEditMode(true);
             setIsLoading(true);
 
-            fetch(`https://sunsharm.runasp.net/api/Trip/${id}`)
+            fetch(`https://sunsharm.runasp.net/api/Trip/${id}`, {
+                // إضافة الـ Token في الهيدر
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
                 .then((response) => response.json())
                 .then((result) => {
                     if (result.succeeded && result.data) {
@@ -89,7 +95,7 @@ const TripForm = () => {
                 .catch((error) => console.error("Error fetching trip:", error))
                 .finally(() => setIsLoading(false));
         }
-    }, [id]);
+    }, [id, token]); // إضافة token للمصفوفة
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -165,6 +171,10 @@ const TripForm = () => {
             const response = await fetch(url, {
                 method: method,
                 body: submitData,
+                // إضافة الـ Token في الهيدر
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             let result = null;
@@ -212,9 +222,19 @@ const TripForm = () => {
 
     return (
         <div className="section light-bg" style={{ minHeight: "100vh" }}>
-            <div className="container" style={{ maxWidth: "900px" }}>
+            <div className="container" style={{ maxWidth: "900px", position: "relative" }}>
 
-                <div className="section-heading centered">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '20px' }}>
+                    <button 
+                        onClick={logout} 
+                        className="btn btn-outline" 
+                        style={{ color: '#d32f2f', borderColor: '#d32f2f', padding: '8px 16px', fontWeight: 'bold' }}
+                    >
+                        تسجيل الخروج <i className="fa-solid fa-arrow-right-from-bracket" style={{ marginLeft: "5px" }}></i>
+                    </button>
+                </div>
+
+                <div className="section-heading centered" style={{ marginTop: "20px" }}>
                     <span className="small-title">لوحة التحكم</span>
                     <h2><strong>{isEditMode ? "تعديل" : "إضافة"}</strong> تفاصيل الرحلة</h2>
                 </div>
@@ -266,7 +286,6 @@ const TripForm = () => {
 
                     <hr style={{ borderTop: "1px solid var(--border)", margin: "30px 0" }} />
 
-                    {/* --- الفنادق والإقامة --- */}
                     <h3 style={{ color: "var(--dark)", fontSize: "18px", marginBottom: "15px" }}>الفنادق والإقامة</h3>
                     <div className="form-row">
                         <div className="form-group">
@@ -292,7 +311,6 @@ const TripForm = () => {
 
                     <hr style={{ borderTop: "1px solid var(--border)", margin: "30px 0" }} />
 
-                    {/* --- المسارات (Routes) --- */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
                         <h3 style={{ color: "var(--dark)", fontSize: "18px", margin: 0 }}>خط السير (Routes)</h3>
                         <button type="button" onClick={addRoute} className="btn btn-outline" style={{ background: "var(--primary-light)", color: "var(--primary)", borderColor: "var(--primary-light)" }}>

@@ -446,7 +446,6 @@ const Home = () => {
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {/* خلفية زخرفية */}
             <i className="fa-solid fa-kaaba" style={{
               position: 'absolute',
               left: '-20px',
@@ -456,7 +455,6 @@ const Home = () => {
               transform: 'rotate(-15deg)'
             }}></i>
 
-            {/* الجزء الأيمن: النص الأساسي والخصم */}
             <div style={{ zIndex: 1 }}>
               <span style={{ 
                 display: 'inline-flex', 
@@ -477,7 +475,6 @@ const Home = () => {
                 مين ناوي على <span style={{ color: 'var(--gold)' }}>الحج السياحي؟</span>
               </h3>
               
-              {/* بطاقة الخصم الجذابة */}
               <div style={{ 
                 background: 'linear-gradient(90deg, #c62828, #d32f2f)', 
                 padding: '20px 25px', 
@@ -513,7 +510,6 @@ const Home = () => {
               </a>
             </div>
 
-            {/* الجزء الأيسر: المميزات بشكل شبكي منظم */}
             <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.06)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(5px)' }}>
@@ -536,7 +532,6 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* مميزات سريعة (4 مربعات) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '5px' }}>
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.06)', padding: '18px 10px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <i className="fa-solid fa-hotel" style={{ fontSize: '26px', color: 'var(--gold)', marginBottom: '10px' }}></i>

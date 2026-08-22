@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-
+const apiCalling = `https://sunsharm.runasp.net/api`
 const AdminTrips = () => {
     const [trips, setTrips] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +14,7 @@ const AdminTrips = () => {
 
     const fetchTrips = () => {
         setIsLoading(true);
-        fetch('https://sunsharm.runasp.net/api/Trip/all', {
+        fetch(`${apiCalling}/Trip/all`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => res.json())
@@ -31,12 +31,10 @@ const AdminTrips = () => {
         fetchTrips();
     }, [token]);
 
-    // دالة فتح نافذة التأكيد
     const handleDeleteClick = (id) => {
         setTripToDelete(id);
     };
 
-    // دالة تنفيذ الحذف بعد التأكيد من النافذة المنبثقة
     const confirmDelete = async () => {
         if (!tripToDelete) return;
         
@@ -45,7 +43,7 @@ const AdminTrips = () => {
         setPageMessage({ text: "", type: "" }); 
 
         try {
-            const response = await fetch(`https://sunsharm.runasp.net/api/Trip/${id}`, {
+            const response = await fetch(`${apiCalling}/Trip/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

@@ -6,7 +6,7 @@ const TripForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     
-    const { token } = useAuth(); // تم إزالة logout بناءً على التعديلات السابقة
+    const { token } = useAuth();
 
     const [isEditMode, setIsEditMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +113,6 @@ const TripForm = () => {
         }));
     };
 
-    // التعديل الثاني: استخدام Spread Operator للحفاظ على باقي خصائص المسار (مثل الـ id)
     const handleRouteUpdate = (index, value) => {
         const updatedRoutes = formData.Routes.map((route, i) =>
             i === index ? { ...route, name: value } : route
